@@ -42,7 +42,7 @@ split_free_fixed <- function(params, fixed=NULL) {
     #if NA is passed for a free parameter, copy the value across
     napars <- names(fpars)[which(is.na(fpars))]
     fpars[napars] <- params$value[napars]
-
+    
     free <- lapply(params, function(el) {
       el[!names(el) %in% names(fixed)]
     })
@@ -99,7 +99,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
         
         choices[i,j] <- current_choices[1] #choose the current action      
       }
-
+      
       #harvest outcome if response is emitted
       if (choices[i,j] != 0) {
         rewards[i,j] <- as.numeric(outcomes[i,j,3] < prew[i,current_choices[1]]) #harvest reward on action
@@ -145,3 +145,93 @@ grwalk <- function(len, start=0.5, step_sd=0.025, max_p=0.8, min_p=0.2)  {
   
   return(probs)
 }
+
+
+myrollfunc <- function(vec, win=20) {
+  require(zoo)
+  rollmean(vec, win, align="right", fill=NA)
+}
+
+##return key summary statistics from run
+get_sim_stats <- function(ins_results, task_environment) {
+  #accepts the output of ins_wins as the ins_results input
+  
+  Q_df <- reshape2::melt(ins_results$Q_tba, varnames=c("trial", "timestep", "action")) %>% 
+    mutate(action=factor(action, levels=c(1,2), labels=c("Q_1", "Q_2")))
+  
+  choices_df <- reshape2::melt(ins_results$choices, varnames=c("trial", "timestep"), value.name="choice")
+  rewards_df <- reshape2::melt(ins_results$rewards, varnames=c("trial", "timestep"), value.name="outcome")
+  
+  trial_plot <- ggplot(Q_df %>% filter(trial < 6), aes(x=timestep, y=value, color=action)) + geom_line() + facet_wrap(~trial, ncol=1)
+  
+  #Q_tba is Q values trials x timesteps x actions
+  #choices_df: action 0 means no action, whereas 1 or 2 denote their respective actions
+  
+  #this has columnns for Q_1 and Q_2
+  
+  #don't compute Q ratio if either is 0
+  all_df <- Q_df %>% spread(action, value) %>% full_join(choices_df) %>% full_join(rewards_df) %>% 
+    arrange(trial, timestep) %>% 
+    mutate(outcome=factor(outcome, levels=c(0,1), labels=c("omission", "reward")),
+           Q_sum=Q_1 + Q_2, 
+           Q_ratio=if_else(Q_1 > 0 & Q_2 > 0, Q_1/Q_2, NA_real_),
+           response=as.numeric(choice > 0),  #any response
+           reward=if_else(outcome=="reward", 1, 0, missing=0)) %>% #recode 1/0 for reward/omission and make NAs (no response) 0s
+    #group_by(trial) %>% #group by trial to get rolling mean to respect each trial
+    mutate(response_rate=myrollfunc(response), #a bin is 30 milliseconds, so this is responses per 450ms
+           reward_rate=myrollfunc(reward),
+           Q_1_roll=myrollfunc(Q_1), Q_2_roll=myrollfunc(Q_2),
+           n_1=myrollfunc(choice==1),
+           n_2=myrollfunc(choice==2),
+           n_1_pref=if_else(n_1 > 0 & n_2 > 0, n_1/n_2, NA_real_),
+           Q_sum_roll=myrollfunc(Q_sum), Q_ratio_roll=myrollfunc(Q_ratio)) %>% 
+    ungroup() %>%
+    mutate(resp_Q_y = case_when(choice==1 ~ Q_1_roll, choice==2 ~ Q_2_roll, TRUE ~ NA_real_))
+  
+  #Q_ratio_roll, 
+  #response_rate, reward_rate
+  
+  sum_df <- all_df %>% group_by(trial) %>% 
+    summarize(nresp=sum(choice > 0), avg_value=sum(Q_1, Q_2),
+              n_1=sum(choice==1), n_2=sum(choice==2),
+              Q_1=sum(Q_1), Q_2=sum(Q_2),
+              Q1_Q2=sum(Q_1) / sum(Q_2),
+              Q1_m_Q2=sum(Q_1) - sum(Q_2),
+              n1_n2=sum(choice==1) / sum(choice==2),
+              n1_m_n2=sum(choice==1) - sum(choice==2))
+  
+  prew_df <- data.frame(task_environment$prew) %>% setNames(c("p_1", "p_2")) %>% mutate(trial=1:n()) %>%
+    mutate(p1_p2=p_1/p_2)
+  
+  sum_df <- sum_df %>% left_join(prew_df) %>%
+    mutate(log_n1_n2 = log(n1_n2), log_p1_p2=log(p1_p2))
+  
+  return(list(all_df=all_df, sum_df=sum_df))
+}
+
+repeat_forward_simulation <- function(params, task_environment, n=100) {
+  all_df_outputs <- list()
+  sum_df_outputs <- list()
+  
+  for (i in 1:n) {
+    #regenerate outcomes matrix and GRWs
+    task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+    task_environment$outcomes <- with(task_environment, array(runif(n_bins*n_trials*3), dim=c(n_trials, n_timesteps, 3)))  
+    
+    results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
+    summaries <- get_sim_stats(results, task_environment)
+    sum_df <- summaries$sum_df
+    all_df <- summaries$all_df
+    sum_df$replication <- i
+    all_df$replication <- i
+    all_df_outputs[[i]] <- all_df
+    sum_df_outputs[[i]] <- sum_df
+  }
+  
+  all_df <- bind_rows(all_df_outputs)
+  sum_df <- bind_rows(sum_df_outputs)
+  return(list(all_df=all_df, sum_df=sum_df))
+}
+
+##function to convert simulated data to format the matches Stan model
+

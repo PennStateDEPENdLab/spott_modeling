@@ -15,7 +15,7 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=2, nu=1, beta=1, eta=1) {
   phi <- 1 - exp(-(tau - rtlast)/beta) #recovery function (motor speed)
   
   #_tb denotes (t)rial, time (b)in
-  p_respond_tb <- phi / (1+exp(-gamma*(Qstar - nu))) #probability of making a response in this bin
+  p_respond_tb <- phi / (1+exp(-gamma*(Qstar + nu))) #probability of making a response in this bin
   return(p_respond_tb)
 }
 
