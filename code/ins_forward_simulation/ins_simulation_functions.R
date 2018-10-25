@@ -59,13 +59,12 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
   n_trials <- task_environment$n_trials
   trial_length <- task_environment$trial_length
   bin_size <- task_environment$bin_size
-  time_resolution <- task_environment$time_resolution
   outcomes <- task_environment$outcomes
   n_timesteps <- task_environment$n_timesteps #I have confounded thinking between bins and timesteps...
   
   choices <- matrix(0, nrow=n_trials, ncol=n_timesteps)
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
-  time_vec <- seq(0, trial_length, by=time_resolution)
+  time_vec <- seq(0, trial_length, by=bin_size)
   
   #allow for trial-varying prew: trials x choices
   if (is.vector(prew)) {
@@ -216,7 +215,7 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   for (i in 1:n) {
     #regenerate outcomes matrix and GRWs
     task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
-    task_environment$outcomes <- with(task_environment, array(runif(n_bins*n_trials*3), dim=c(n_trials, n_timesteps, 3)))  
+    task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))  
     
     results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
     summaries <- get_sim_stats(results, task_environment)
@@ -234,4 +233,56 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
 }
 
 ##function to convert simulated data to format the matches Stan model
-
+#wrapper around repeat_forward simulation that converts to same format as empirical data
+sim_data_for_stan <- function(pars, task_environment, n=100) {
+  results <- repeat_forward_simulation(pars, task_environment, n)
+  subj_data <- results$all_df
+  bin_boundaries <- seq(0, task_environment$trial_length, by=task_environment$bin_size)
+  timestep_vector <- sort(unique(subj_data$timestep))
+  time_vec <- seq(0, task_environment$trial_length, by=task_environment$bin_size)
+  bin_centers <- time_vec[-1] - task_environment$bin_size/2
+  time_levels <- Hmisc::cut2(bin_centers, time_vec)
+  
+  subj_data <- subj_data %>% 
+    dplyr::rename(instrial=trial, id=replication, key=choice, nreward=reward, npress=response) %>%
+    mutate(bincenter = plyr::mapvalues(timestep, from=timestep_vector, to=bin_centers),
+           binmedian = if_else(npress > 0, bincenter, NA_real_),
+           latency_bin = factor(subj_data$timestep, 
+                                levels=timestep_vector,
+                                labels=time_levels)
+    ) %>%
+    group_by(id, instrial) %>% do({
+      df <- . #for some reason, using . throughout results in returning the same data.frame repeatedly (loses grouping structure)
+      df$curkey <- NA_integer_
+      df$tdiff <- NA_real_
+      df$switch <- 0
+      
+      curkey <- 0
+      lastrt <- 0 #the start of the trial (time = 0) is treated as last rt. thus, tdiff accumulates up to first button press
+      firstkey <- df$key[df$key > 0][1] #give the model the first press (i.e., give the model a bit of clairvoyance wrt the subject's first choice)
+      curkey <- firstkey
+      for (i in 1:nrow(df)) {
+        if (df$key[i] != 0 && df$key[i] != curkey ) {
+          curkey <- df$key[i]
+          df$switch[i] <- 1
+        }
+        
+        if (!is.na(df$binmedian[i])) {
+          rt_k <- lastrt
+          lastrt <- df$binmedian[i] #now update the running tracker of last response
+          tau <- lastrt #use the last rt versus this rt as the tdiff in a response bin
+        } else {
+          tau <- df$bincenter[i]
+          rt_k <- lastrt
+        }
+        
+        df$curkey[i] <- curkey
+        df$tdiff[i] <- tau - rt_k
+      }
+      
+      df
+    }) %>% ungroup() %>%
+    select(id, instrial, latency_bin, key, binmedian, npress, nreward, switch, bincenter, curkey, tdiff) 
+  
+  return(subj_data)
+}

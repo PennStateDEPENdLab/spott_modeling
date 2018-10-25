@@ -22,8 +22,7 @@ task_environment <- list(
   #prew=c(0.5,0.3),
   n_trials=60,
   trial_length=6000, #6 seconds
-  bin_size=60,
-  time_resolution=30
+  bin_size=50
 )
 
 #gaussian random walk probabilities
@@ -32,9 +31,8 @@ task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08
 #simulate random uniform numbers that control the environment
 #this needs to be constant in optimization so that the cost function is on the same scale across iterations
 #random numbers on choices for trials and timesteps. Last dim is p_response, p_switch, outcome (three points at which outputs are probabilistic)
-task_environment$n_bins <- with(task_environment, trial_length/bin_size)
-task_environment$n_timesteps <- with(task_environment, trial_length/time_resolution + 1)
-task_environment$outcomes <- with(task_environment, array(runif(n_bins*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
+task_environment$n_timesteps <- with(task_environment, trial_length/bin_size)
+task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
 
 #run the model at these parameter settings.
 ins_results <- ins_wins(initial_params$value, fixed=NULL, task_environment, optimize=FALSE)
@@ -56,6 +54,9 @@ res <- foreach(i=seq_along(kappas)) %dopar% {
   sdf$kappa <- kappas[i]
   return(sdf)
 }
+
+#simulate data for stan fitting
+test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
 
 # res <- lapply(1:length(res), function(x) {
 #   res[[x]]$kappa <- kappas[x]
