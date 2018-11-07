@@ -23,7 +23,13 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=2, nu=1, beta=1, eta=1) {
 # unchosen action (Q_u)
 # scalar switch (cost)
 # chosen action (Q_c)
-p_switch <- function(Q_c, Q_u, kappa, cost) { 1 / (1 + exp(-1*kappa*(Q_u - cost - Q_c) )) }
+# 10/2018 update: convert cost into a 0..1 probability treated outside of the softmax
+p_switch <- function(Q_c, Q_u, kappa, cost) { 
+  ps <- (1 / (1 + exp(-1*kappa*(Q_u - Q_c) ))) - cost
+  if (ps > 1) { ps <- 1 #enforce 0..1 boundaries after accounting for cost
+  } else if (ps < 0) { ps <- 0 }
+  return(ps)
+}
 
 #learning rule
 # options for variants:

@@ -169,7 +169,7 @@ get_sim_stats <- function(ins_results, task_environment) {
   #this has columnns for Q_1 and Q_2
   
   #don't compute Q ratio if either is 0
-  all_df <- Q_df %>% spread(action, value) %>% full_join(choices_df) %>% full_join(rewards_df) %>% 
+  all_df <- Q_df %>% spread(action, value) %>% full_join(choices_df, by=c("trial", "timestep")) %>% full_join(rewards_df, by=c("trial", "timestep")) %>% 
     arrange(trial, timestep) %>% 
     mutate(outcome=factor(outcome, levels=c(0,1), labels=c("omission", "reward")),
            Q_sum=Q_1 + Q_2, 
@@ -202,7 +202,7 @@ get_sim_stats <- function(ins_results, task_environment) {
   prew_df <- data.frame(task_environment$prew) %>% setNames(c("p_1", "p_2")) %>% mutate(trial=1:n()) %>%
     mutate(p1_p2=p_1/p_2)
   
-  sum_df <- sum_df %>% left_join(prew_df) %>%
+  sum_df <- sum_df %>% left_join(prew_df, by="trial") %>%
     mutate(log_n1_n2 = log(n1_n2), log_p1_p2=log(p1_p2))
   
   return(list(all_df=all_df, sum_df=sum_df))
@@ -231,6 +231,58 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   sum_df <- bind_rows(sum_df_outputs)
   return(list(all_df=all_df, sum_df=sum_df))
 }
+
+sim_spott_free_operant_group <- function(nsubjects=50, 
+                                         parameters = list(
+                                           alpha=list(min=0.01, max=0.99, mean=0.1, sd=0.06),
+                                           gamma=list(shape=3, rate=1),
+                                           nu=list(mean=-0.5, sd=1),
+                                           beta=list(shape=4, rate=1/100),
+                                           cost=list(shape1=.2, shape2=6.5),
+                                           kappa=list(shape=3, rate=1)
+                                         ),
+                                         task_environment,
+                                quiet=FALSE, seed=1050, ...) {
+  
+  require(truncnorm)
+  set.seed(seed) #keep sims consistent
+  
+  #simulate subject parameters
+  #alpha (learning rate) from truncated normal
+  alpha_subj <- rtruncnorm(nsubjects, a=parameters$alpha$min, b=parameters$alpha$max, 
+                           mean = parameters$alpha$mean, sd = parameters$alpha$sd)
+  
+  #gamma (vigor sensitivity -- logistic slope) from gamma (haha) 3,1 distribution 
+  gamma_subj <- rgamma(nsubjects, shape=parameters$gamma$shape, rate=parameters$gamma$rate)
+  
+  #nu is basal vigor (difficulty in IRT terms), which scales the level of value in the environment needed to promote a response. sample from normal
+  nu_subj <- rnorm(nsubjects, mean=parameters$nu$mean, sd=parameters$nu$sd)
+  
+  #beta (motor speed) from a gamma (4, .01) distribution
+  beta_subj <- rgamma(nsubjects, shape=parameters$beta$shape, rate=parameters$beta$rate)
+  
+  #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
+  cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
+  
+  #kappa (softmax temperature in p_switch). Sample from gamma (3,1) distribution, as with gamma parameter
+  kappa_subj <- rgamma(nsubjects, shape=parameters$kappa$shape, rate=parameters$kappa$rate)
+  
+  parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, cost=cost_subj, kappa=kappa_subj)
+
+  dlist <- list()
+  
+  for (i in 1:nrow(parmat)) {
+    subj_data <- sim_data_for_stan(parmat[i,], task_environment, n=1)
+    subj_data$id <- i
+    subj_data <- cbind(subj_data, as.list(parmat[i,]))
+    dlist[[i]] <- subj_data
+  }
+  
+  dlist <- dplyr::bind_rows(dlist)
+
+  return(dlist)    
+}
+
 
 ##function to convert simulated data to format the matches Stan model
 #wrapper around repeat_forward simulation that converts to same format as empirical data

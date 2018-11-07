@@ -42,6 +42,18 @@ sstats <- get_sim_stats(ins_results, task_environment)
 sum_df <- sstats$sum_df
 all_df <- sstats$all_df
 
+#simulate data for stan fitting
+test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
+
+#simulate data using a population distribution on the parameters
+stan_population <- sim_spott_free_operant_group(nsubjects=50, task_environment = task_environment)
+
+#if you want just the parameters
+parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, beta, cost, kappa), mean)
+
+readr::write_csv(stan_population, path="data/stan_population_demo_trialdata.csv.gz")
+write.csv(parmat, file="data/stan_population_demo_parameters.csv", row.names=F)
+
 #repeat the same model, but in 100 environments (regenerating GRWs)
 library(doMC)
 registerDoMC(6)
@@ -55,8 +67,6 @@ res <- foreach(i=seq_along(kappas)) %dopar% {
   return(sdf)
 }
 
-#simulate data for stan fitting
-test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
 
 # res <- lapply(1:length(res), function(x) {
 #   res[[x]]$kappa <- kappas[x]
