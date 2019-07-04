@@ -19,7 +19,7 @@ function  [fx] = suuvid_base_evo(Xt, theta, u, inF)
 theta = transform_theta(theta, inF);
 alpha = theta(1);
 
-n_actions = inF.n_outputs;
+n_actions = inF.hidden_states;
 
 %update value of chosen action
 Qcur = Xt(1:n_actions);

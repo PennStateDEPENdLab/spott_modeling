@@ -17,7 +17,7 @@ cost = phi(5); %stickiness
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
 
-n_actions = inG.n_outputs;
+n_actions = inG.hidden_states;
 phi_tb = 1 - exp(-tdiff/beta);
 
 Qcur = Xt(1:n_actions);
@@ -37,6 +37,6 @@ m = kappa*Qcur + cost*cc;
 m = m - max(m); %rescale for avoiding floating point overflow
 p_which = exp(m)/sum(exp(m));
 
-gx = p_which * p_respond; %predicted probabilities
+gx = [p_which * p_respond; 1 - p_respond]; %predicted probabilities
 
 end

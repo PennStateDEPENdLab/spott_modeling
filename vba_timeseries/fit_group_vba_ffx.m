@@ -53,7 +53,7 @@ models = {'suuvid_base'};
 for mnum = 1:length(models)
     vo=[]; %vba options structure
     vo.model = models{mnum};
-    vo.graphics = 1;
+    vo.graphics = 0; %don't display fitting interactively
     vo = validate_options(vo); %initialize and validate suuvid fitting settings
         
     vo.output_dir = [project_repo, '/outputs/vba_out/ffx/', vo.model];

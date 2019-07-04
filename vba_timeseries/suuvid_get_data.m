@@ -5,10 +5,15 @@ n_t = size(data,1); %number of rows
 n_actions = max(data{:, 'key'});
 observations_to_fit = 1:n_t; %fit all observations by default
 
-y = zeros(n_actions, n_t);
+y = zeros(n_actions+1, n_t); %last element is no response
 for i = 1:n_t
     this_key = data{i, 'key'};
-    if this_key > 0, y(this_key, i) = 1; end %populate element of y vector for chosen action
+    if this_key > 0
+        y(this_key, i) = 1; %populate element of y vector for chosen action
+    else
+        y(end, i) = 1; %populate no response
+    end 
+    
 end
 
 %right shift reinforcement

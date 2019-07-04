@@ -43,8 +43,8 @@ if strcmpi(vo.model,'suuvid_base')
     vo.hidden_states = 2; %two-action approach for now
     vo.state_names = {'Q1', 'Q2'};
     
-    vo.n_outputs = 2; %two actions
-    vo.y_names = {'y1', 'y2'};
+    vo.n_outputs = 3; %two actions + no response
+    vo.y_names = {'y1', 'y2', 'none'};
     
     vo.n_theta=1;
     vo.theta_names={'alpha'};

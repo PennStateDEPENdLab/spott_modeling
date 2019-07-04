@@ -71,7 +71,7 @@ priors = get_priors(dim, vo);
 options.priors = priors;
 options.inG.priors = priors; %copy priors into inG for parameter transformation (e.g., Gaussian -> uniform)
 
-options.sources(1) = struct('out', 1:2, 'type', 1); %choice is binomial
+options.sources(1) = struct('out', 1:vo.n_outputs, 'type', 2); %choice is multinomial (with no response)
 
 % if vo.multinomial
 %   options.sources(1) = struct('out', 1:vo.ntimesteps, 'type', 2);
