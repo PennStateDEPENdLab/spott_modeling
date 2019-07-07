@@ -34,11 +34,11 @@ if ~isfield(vo, 'graphics'), vo.graphics=0; end
 if ~isfield(vo, 'model'), vo.model='suuvid_base'; end
 if ~isfield(vo, 'saveresults'), vo.saveresults=0; end %used in some places to denote whether to save fitted outputs
 
-%default to identity mappings for states (could be overridden below)
-vo.obs_fname = @suuvid_obs;
 
 %hidden states field used to index hidden state vector inside evolution and observation functions
 if strcmpi(vo.model,'suuvid_base')
+    vo.obs_fname = @suuvid_obs;
+
     vo.evo_fname = @suuvid_base_evo;
     vo.hidden_states = 2; %two-action approach for now
     vo.state_names = {'Q1', 'Q2'};
@@ -50,9 +50,40 @@ if strcmpi(vo.model,'suuvid_base')
     vo.theta_names={'alpha'};
 
     vo.n_phi = 5;
-    vo.phi_names = {'phi', 'gamma', 'nu', 'kappa', 'cost'};
+    vo.phi_names = {'beta', 'gamma', 'nu', 'kappa', 'cost'};
 
-%else other models        
+elseif strcmpi(vo.model, 'suuvid_fixbeta')
+    vo.obs_fname = @suuvid_obs_fixbeta;
+    vo.beta = 100; %fix at a sane value
+
+    vo.evo_fname = @suuvid_base_evo;
+    vo.hidden_states = 2; %two-action approach for now
+    vo.state_names = {'Q1', 'Q2'};
+    
+    vo.n_outputs = 3; %two actions + no response
+    vo.y_names = {'y1', 'y2', 'none'};
+    
+    vo.n_theta=1;
+    vo.theta_names={'alpha'};
+
+    vo.n_phi = 4;
+    vo.phi_names = {'gamma', 'nu', 'kappa', 'cost'};
+
+elseif strcmpi(vo.model, 'suuvid_nonu')
+    vo.obs_fname = @suuvid_obs_nonu;
+
+    vo.evo_fname = @suuvid_base_evo;
+    vo.hidden_states = 2; %two-action approach for now
+    vo.state_names = {'Q1', 'Q2'};
+    
+    vo.n_outputs = 3; %two actions + no response
+    vo.y_names = {'y1', 'y2', 'none'};
+    
+    vo.n_theta=1;
+    vo.theta_names={'alpha'};
+
+    vo.n_phi = 4;
+    vo.phi_names = {'beta', 'gamma', 'kappa', 'cost'};
 end
 
 end

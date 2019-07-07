@@ -1,4 +1,4 @@
-function  [ gx ] = suuvid_obs(Xt, phi, u, inG)
+function  [ gx ] = suuvid_obs_fixbeta(Xt, phi, u, inG)
 % INPUT
 % - x_t : hidden states (weights of basis functions)
 % - phi : temperature (1x1)
@@ -8,11 +8,11 @@ function  [ gx ] = suuvid_obs(Xt, phi, u, inG)
 % - gx : p(chosen|x_t)
 
 phi = transform_phi(phi, inG);
-beta = phi(1); %motor speed recovery rate
-gamma = phi(2); %slope on vigor logistic (sensitivity)
-nu = phi(3); %basal vigor
-kappa = phi(4); %softmax temperature
-cost = phi(5); %stickiness
+beta = inG.beta; %motor speed recovery rate
+gamma = phi(1); %slope on vigor logistic (sensitivity)
+nu = phi(2); %basal vigor
+kappa = phi(3); %softmax temperature
+cost = phi(4); %stickiness
 
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
@@ -28,8 +28,10 @@ p_respond = phi_tb/(1 + exp(-gamma * (Qtot + nu)));
 
 %which action to choose
 
-cc = zeros(1, n_actions);
-cc(active_action) = 1; %populate current action to capture stickiness
+cc = zeros(n_actions,1); %row vector, as with Q
+if active_action > 0 %will be zero before an action is chosen in a trial
+    cc(active_action) = 1; %populate current action to capture stickiness
+end
 
 %Lau and Glimcher 2005
 m = kappa*Qcur + cost*cc;

@@ -4,7 +4,6 @@ function [options, dim] = get_vba_options(data, vo)
 vo=validate_options(vo); %should be handled upstream, but just in case
 
 options=[];
-priors=[];
 
 if ~vo.graphics
   options.DisplayWin = 0; %whether to display graphics during fitting
@@ -47,35 +46,18 @@ options.skipf = zeros(1,n_t);
 options.skipf(1) = 1;
 
 %% specify dimensions of data to be fit
-dim=struct();
-
 dim = struct('n', vo.hidden_states, ... %number of hidden states
     'n_theta', vo.n_theta, ...
     'n_phi', vo.n_phi, ...
     'p', vo.n_outputs, ...
     'n_t', n_t);
 
-% if ismember(vo.model, {'gvap', 'gvap_pmom', 'gvap_null', 'gvap_cross', 'gvap_hours', 'gvap_dayonly'})
-%     dim = struct('n', vo.hidden_states, ... %number of hidden states
-%         'n_theta', vo.n_theta, ...
-%         'n_phi', vo.n_phi, ...
-%         'p', vo.n_outputs, ...
-%         'n_t', n_t);
-% else
-%     error('unknown model');
-% end
-
-%%populate priors
+%% populate priors
 priors = get_priors(dim, vo);
 
 options.priors = priors;
 options.inG.priors = priors; %copy priors into inG for parameter transformation (e.g., Gaussian -> uniform)
 
 options.sources(1) = struct('out', 1:vo.n_outputs, 'type', 2); %choice is multinomial (with no response)
-
-% if vo.multinomial
-%   options.sources(1) = struct('out', 1:vo.ntimesteps, 'type', 2);
-%   options.binomial = 1; %multinomial fitting
-% end
 
 end

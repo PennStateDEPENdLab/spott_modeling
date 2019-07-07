@@ -51,13 +51,13 @@ end
 
 par_names_transformed=strcat(par_names, '_transformed');
 
-params = cellfun(@(x) num2cell([x.muTheta', x.muPhi]), s_array, 'UniformOutput', false);
-params_transformed = cellfun(@(x) num2cell([x.transformed.muTheta', x.transformed.muPhi]), s_array, 'UniformOutput', false);
+params = cellfun(@(x) num2cell([x.muTheta', x.muPhi']), s_array, 'UniformOutput', false);
+params_transformed = cellfun(@(x) num2cell([x.transformed.muTheta', x.transformed.muPhi']), s_array, 'UniformOutput', false);
 
 has_ffx = all(cellfun(@(x) isfield(x, 'muTheta_ffx'), s_array));
 if has_ffx
-  params_ffx = cellfun(@(x) num2cell([x.muTheta_ffx', x.muPhi_ffx]), s_array, 'UniformOutput', false);
-  params_transformed_ffx = cellfun(@(x) num2cell([x.transformed.muTheta_ffx', x.transformed.muPhi_ffx]), s_array, 'UniformOutput', false);
+  params_ffx = cellfun(@(x) num2cell([x.muTheta_ffx', x.muPhi_ffx']), s_array, 'UniformOutput', false);
+  params_transformed_ffx = cellfun(@(x) num2cell([x.transformed.muTheta_ffx', x.transformed.muPhi_ffx']), s_array, 'UniformOutput', false);
 end
 
 %validate elements of fit structure
