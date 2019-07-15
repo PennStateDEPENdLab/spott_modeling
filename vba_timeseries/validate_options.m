@@ -84,6 +84,22 @@ elseif strcmpi(vo.model, 'suuvid_nonu')
 
     vo.n_phi = 4;
     vo.phi_names = {'beta', 'gamma', 'kappa', 'cost'};
+
+elseif strcmpi(vo.model, 'suuvid_nobeta')
+    vo.obs_fname = @suuvid_obs_nobeta;
+
+    vo.evo_fname = @suuvid_base_evo;
+    vo.hidden_states = 2; %two-action approach for now
+    vo.state_names = {'Q1', 'Q2'};
+    
+    vo.n_outputs = 3; %two actions + no response
+    vo.y_names = {'y1', 'y2', 'none'};
+    
+    vo.n_theta=1;
+    vo.theta_names={'alpha'};
+
+    vo.n_phi = 4;
+    vo.phi_names = {'gamma', 'nu', 'kappa', 'cost'};
 end
 
 end

@@ -24,24 +24,28 @@ reinforcement = data{observations_to_fit, 'nreward'};
 %remove the curkey clairvoyance for now: generates a ramping up of predicted probability for first chosen action in a trial
 zero_curkey=1;
 for i = 1:length(new_trial)
+
     if choice(i) > 0
         zero_curkey = 0; %disable zeroing now that a key has been pressed
     elseif new_trial(i) == 1
         zero_curkey = 1; %on a new trial, enable zeroing out
+        if i > 1, data{i-1, 'curkey'} = 0; end %also zero out preceding timestep because we double-lag curkey. This will ensure a 0 on a new trial
     end
     
     if zero_curkey == 1
         data{i, 'curkey'} = 0;
     end
+    
 end
 
 
 
-u = [ new_trial, ...
+%right shift everything by 1 to get learning rule/evolution right
+u = [ [ 0; new_trial(1:end-1) ], ...
     [ 0; choice(1:end-1) ], ...
     [ 0; reinforcement(1:end-1) ], ...
     [ 0; data{observations_to_fit(1:end-1), 'tdiff'} ], ...
-    [ 0; 0; data{observations_to_fit(1:end-2), 'curkey'} ], ... %double lag curkey to prevent clairvoyance
+    [ 0; 0; data{observations_to_fit(1:end-2), 'curkey'} ], ... %double lag curkey to prevent clairvoyance: only change curkey AFTER choice
     ]';
 
 end

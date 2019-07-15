@@ -44,6 +44,17 @@ elseif strcmpi(vo.model, 'suuvid_nonu')
     
     priors.SigmaPhi = [10,10,1,10].*eye(dim.n_phi); %variance of 10 on all excpet kappa (gamma inverse cdf transform)
 
+elseif strcmpi(vo.model, 'suuvid_nobeta')
+    priors.muTheta = zeros(dim.n_theta, 1);
+    priors.SigmaTheta = 1e1*eye(dim.n_theta); %variance of 10 on all
+    
+    priors.muPhi = [0; ... %gamma: exponentiates to 1
+        0; ... %nu: keep at zero prior
+        0; ... %kappa (temperature); Gamma(2,1) transform to 1.67
+        0 ]; %cost weight: keep at 0 prior
+    
+    priors.SigmaPhi = [10,10,1,10].*eye(dim.n_phi); %variance of 10 on all excpet kappa (gamma inverse cdf transform)
+
 elseif strcmpi(vo.model, 'suuvid_fixbeta')
     priors.muTheta = zeros(dim.n_theta, 1);
     priors.SigmaTheta = 1e1*eye(dim.n_theta); %variance of 10 on all

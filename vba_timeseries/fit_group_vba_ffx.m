@@ -49,7 +49,8 @@ poolobj=parpool('local',4); %just use shared pool for now since it seems not to 
 % models = {'ap', 'ap_ravg', 'ap_dayonly', 'ap_dayonly_nest', 'ap_hours', ...
 %     'ap_null', 'ap_dynaffect', 'ap_dynaffect_hours', 'ap_dynaffect_hours_scalar', 'ap_dynaffect_homerun'};
 
-models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta'};
+%models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
+models = {'suuvid_nobeta'};
 
 %models = {'suuvid_base'};
 %inputfiles = inputfiles(23:26);
