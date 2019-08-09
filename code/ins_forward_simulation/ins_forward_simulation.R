@@ -3,6 +3,73 @@ library(tidyverse)
 source("code/ins_forward_simulation/ins_simulation_functions.R")
 source("code/ins_forward_simulation/ins_learning_choice_rules.R")
 
+
+##July 2019: UPDATED example using sticky softmax instead of p_switch
+#free parameters:
+# - alpha: learning rate
+# - gamma: vigor sensitivity
+# - nu: basal vigor
+# - beta: motor refractory speed in p_respond
+# - cost: temperature on sticky-guided part of softmax choice
+# - kappa: temperature on value-guided part of softmax choice
+
+initial_params <- list(
+  value=c(     alpha=0.1,   gamma=2,   nu=-1,   beta=200, cost=0.01, kappa=2), #make it more decisive/exploitative
+  lower=c(     alpha=0.001, gamma=0.1, nu=0,   beta=25,  cost=-10,    kappa=0.001),
+  upper=c(     alpha=0.99,  gamma=100, nu=5,   beta=500, cost=10,    kappa=10),
+  par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, beta=1e0, cost=1e-1, kappa=1e-1)
+)
+
+task_environment <- list(
+  #prew=c(0.5,0.3), #for constant probs
+  n_trials=60,
+  trial_length=6000, #6 seconds
+  bin_size=50,
+  sticky_softmax=TRUE
+)
+
+#gaussian random walk probabilities
+task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+
+#simulate random uniform numbers that control the environment
+#this needs to be constant in optimization so that the cost function is on the same scale across iterations
+#random numbers on choices for trials and timesteps. Last dim is p_response, p_switch, outcome (three points at which outputs are probabilistic)
+task_environment$n_timesteps <- with(task_environment, trial_length/bin_size)
+task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
+
+#run the model at these parameter settings.
+ins_results <- ins_wins(initial_params$value, fixed=NULL, task_environment, optimize=FALSE)
+
+#get summary statistics
+sstats <- get_sim_stats(ins_results, task_environment)
+sum_df <- sstats$sum_df
+all_df <- sstats$all_df
+
+#simulate data for stan fitting
+#test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
+
+#simulate data using a population distribution on the parameters
+stan_population <- sim_spott_free_operant_group(nsubjects=80, task_environment = task_environment)
+
+parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, beta, cost, kappa), mean)
+
+out_dir <- "/Users/mnh5174/Data_Analysis/spott_modeling/data/vba_input_simulated_n80"
+if (!dir.exists(out_dir)) { dir.create(out_dir) }
+dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -beta, -cost, -kappa)
+
+dsplit <- split(dsplit, dsplit$id)
+sapply(1:length(dsplit), function(d) {
+  id <- names(dsplit)[d]
+  data <- dsplit[[d]]
+  write.csv(data, file=file.path(out_dir, sprintf("%03s_spott_50.csv", id)), row.names=F)
+})
+
+#readr::write_csv(stan_population, path="data/stan_population_demo_trialdata.csv.gz")
+write.csv(parmat, file=file.path(out_dir, "stan_population_demo_parameters.csv"), row.names=F)
+
+
+## Older approach using switch cost approach
+
 #free parameters:
 # - alpha: learning rate
 # - gamma: vigor sensitivity

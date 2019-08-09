@@ -31,6 +31,22 @@ p_switch <- function(Q_c, Q_u, kappa, cost) {
   return(ps)
 }
 
+p_sticky_softmax <- function(Q, cur_action, kappa, cost) {
+  stopifnot(length(Q) > 1)
+  if (cur_action > length(Q)) { stop("cur_action must be in the set of available actions") }
+  
+  #allocate vector representing currently active option
+  cc <- rep(0, length(Q))
+  cc[cur_action] <- 1
+  
+  m <- kappa*Q + cost*cc
+  
+  m <- m - max(m) #avoid floating point overflow
+  
+  p_which <- exp(m)/sum(exp(m))
+  return(p_which)
+}
+
 #learning rule
 # options for variants:
 # - decay of unchosen action (probably not plausible in small state space)

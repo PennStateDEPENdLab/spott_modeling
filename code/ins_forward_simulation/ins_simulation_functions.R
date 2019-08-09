@@ -61,7 +61,10 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
   bin_size <- task_environment$bin_size
   outcomes <- task_environment$outcomes
   n_timesteps <- task_environment$n_timesteps #I have confounded thinking between bins and timesteps...
-  
+  if (is.null(task_environment$sticky_softmax)) {
+    message("Defaulting to p_switch instead of sticky_softmax")
+    task_environment$sticky_softmax <- FALSE
+  }
   choices <- matrix(0, nrow=n_trials, ncol=n_timesteps)
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
   time_vec <- seq(0, trial_length, by=bin_size)
@@ -88,7 +91,17 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
       
       #decide whether to emit a response
       if (emit_response > outcomes[i,j,1]) {
-        c_ij <- p_switch(Q_c=Q_tba[i,j,current_choices[1]], Q_u=Q_tba[i,j,current_choices[2]], kappa=params["kappa"], cost=params["cost"])
+        
+        #decide which option to choose
+        if (task_environment$sticky_softmax) {
+          #rather than refactor the approach of current_choices[1] being chosen and [2] being unchosen, I just keep the 'swap' idea with sticky softmax
+          c_ij <- p_sticky_softmax(Q_tba[i,j,], cur_action=1, kappa=params["kappa"], cost=params["cost"])
+          c_ij <- c_ij[2] #just keep probability of selecting unchosen action, consistent with logic below
+                    
+        } else {
+          c_ij <- p_switch(Q_c=Q_tba[i,j,current_choices[1]], Q_u=Q_tba[i,j,current_choices[2]], kappa=params["kappa"], cost=params["cost"])
+        }
+       
         if (c_ij > outcomes[i,j,2]) {
           #switch actions
           #active_choice <- all_choices[all_choices != active_choice]
@@ -96,7 +109,8 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
           current_choices <- rev(current_choices) #for binary choice, just swap vector (first position is active choice, second is inactive)
         }
         
-        choices[i,j] <- current_choices[1] #choose the current action      
+        choices[i,j] <- current_choices[1] #choose the current action 
+        
       }
       
       #harvest outcome if response is emitted
@@ -261,8 +275,18 @@ sim_spott_free_operant_group <- function(nsubjects=50,
   #beta (motor speed) from a gamma (4, .01) distribution
   beta_subj <- rgamma(nsubjects, shape=parameters$beta$shape, rate=parameters$beta$rate)
   
-  #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
-  cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
+  if (task_environment$sticky_softmax) {
+    if (!is.null(parameters$cost$shape1)) {
+      message("Switching over to Normal(1,2) prior on cost")
+      parameters$cost <- list(mean=1, sd=2)
+    }
+    
+    #cost parameter is in softmax temperature units -- sample from Gaussian centered on zero
+    cost_subj <- rnorm(nsubjects, mean=parameters$cost$mean, sd=parameters$cost$sd)
+  } else {
+    #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
+    cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
+  }
   
   #kappa (softmax temperature in p_switch). Sample from gamma (3,1) distribution, as with gamma parameter
   kappa_subj <- rgamma(nsubjects, shape=parameters$kappa$shape, rate=parameters$kappa$rate)
