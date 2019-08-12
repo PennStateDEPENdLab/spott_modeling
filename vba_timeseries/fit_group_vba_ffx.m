@@ -15,12 +15,12 @@ is_alex=strcmp(me,'Alex')==1;
 
 %% set environment and define file locations
 project_repo = '~/Data_Analysis/spott_modeling';
-data_source=[project_repo, '/data/vba_input'];
+data_source=[project_repo, '/data/vba_input_simulated_n80'];
 addpath(genpath('~/Documents/MATLAB/VBA-toolbox'));
 addpath([project_repo, '/vba_timeseries/evo_functions']);
 addpath([project_repo, '/vba_timeseries/obs_functions']);
 
-inputfiles = dir([data_source, '/*.csv']);
+inputfiles = dir([data_source, '/*spott_50.csv']);
 
 %extract IDs for record keeping
 ids = cellfun(@(x) char(regexp(x,'[\d]+','match','once')), {inputfiles.name}, 'UniformOutput', false);
@@ -57,6 +57,7 @@ models = {'suuvid_nobeta'};
 
 for mnum = 1:length(models)
     vo=[]; %vba options structure
+    vo.dataset = 'vba_sim_n80';
     vo.model = models{mnum};
     vo.graphics = 0; %don't display fitting interactively
     vo = validate_options(vo); %initialize and validate suuvid fitting settings
