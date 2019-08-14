@@ -1,11 +1,14 @@
-function [data, y, u] = suuvid_get_data(data_file, id, vo)
+function [data, y, u] = suuvid_get_data(data_file, vo)
 data = readtable(data_file,'Delimiter',',','ReadVariableNames',true, 'TreatAsEmpty',{'.','NA'});
 
 n_t = size(data,1); %number of rows
-n_actions = max(data{:, 'key'});
 observations_to_fit = 1:n_t; %fit all observations by default
 
-y = zeros(n_actions+1, n_t); %last element is no response
+%this will choke if the subject (or simulation) only has 1 unique button, but the model expects 2+
+%n_actions = max(data{:, 'key'});
+%y = zeros(n_actions+1, n_t); %last element is no response
+
+y = zeros(vo.n_outputs, n_t); %last element is no response
 for i = 1:n_t
     this_key = data{i, 'key'};
     if this_key > 0
