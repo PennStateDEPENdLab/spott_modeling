@@ -62,7 +62,7 @@ for mnum = 1:length(models)
     vo.graphics = 0; %don't display fitting interactively
     vo = validate_options(vo); %initialize and validate suuvid fitting settings
         
-    vo.output_dir = [project_repo, '/outputs/vba_out/ffx/', vo.model];
+    vo.output_dir = [project_repo, '/outputs/vba_out/ffx/', vo.dataset, '/', vo.model];
     if ~exist(vo.output_dir, 'dir'), mkdir(vo.output_dir); end
 
     % Log evidence matrix
