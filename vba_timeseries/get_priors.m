@@ -66,6 +66,13 @@ elseif strcmpi(vo.model, 'suuvid_fixbeta')
     
     priors.SigmaPhi = [10,10,1,10].*eye(dim.n_phi); %variance of 10 on all excpet kappa (gamma inverse cdf transform)
 
+elseif strcmpi(vo.model, 'suuvid_minimal')
+    priors.muTheta = zeros(dim.n_theta, 1);
+    priors.SigmaTheta = 1e1*eye(dim.n_theta); %variance of 10 on all
+    
+    priors.muPhi = [0]; %gamma: exponentiates to 1
+    priors.SigmaPhi = [10].*eye(dim.n_phi); %variance of 10 on all excpet kappa (gamma inverse cdf transform)
+
 end
 
 

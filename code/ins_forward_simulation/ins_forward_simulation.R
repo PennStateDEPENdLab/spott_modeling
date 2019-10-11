@@ -14,14 +14,14 @@ source("code/ins_forward_simulation/ins_learning_choice_rules.R")
 # - kappa: temperature on value-guided part of softmax choice
 
 initial_params <- list(
-  value=c(     alpha=0.1,   gamma=2,   nu=-1,   beta=200, cost=0.01, kappa=2), #make it more decisive/exploitative
+  value=c(     alpha=0.1,   gamma=2,   nu=-1,   beta=200, cost=0, kappa=8), #make it more decisive/exploitative
   lower=c(     alpha=0.001, gamma=0.1, nu=0,   beta=25,  cost=-10,    kappa=0.001),
   upper=c(     alpha=0.99,  gamma=100, nu=5,   beta=500, cost=10,    kappa=10),
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, beta=1e0, cost=1e-1, kappa=1e-1)
 )
 
 task_environment <- list(
-  #prew=c(0.5,0.3), #for constant probs
+  #prew=c(0.8,0.2), #for constant probs
   n_trials=60,
   trial_length=6000, #6 seconds
   bin_size=50,
@@ -38,22 +38,28 @@ task_environment$n_timesteps <- with(task_environment, trial_length/bin_size)
 task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
 
 #run the model at these parameter settings.
-ins_results <- ins_wins(initial_params$value, fixed=NULL, task_environment, optimize=FALSE)
+# ins_results <- ins_wins(initial_params$value, fixed=NULL, task_environment, optimize=FALSE)
 
 #get summary statistics
-sstats <- get_sim_stats(ins_results, task_environment)
-sum_df <- sstats$sum_df
-all_df <- sstats$all_df
+# sstats <- get_sim_stats(ins_results, task_environment)
+# sum_df <- sstats$sum_df
+# all_df <- sstats$all_df
 
 #simulate data for stan fitting
 #test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
 
 #simulate data using a population distribution on the parameters
-stan_population <- sim_spott_free_operant_group(nsubjects=80, task_environment = task_environment)
+stan_population <- sim_spott_free_operant_group(nsubjects=80, task_environment = task_environment,
+                                                parameters=list( #use this list to provide expressions that are evaluated to generate group parameter distributions
+                                                  kappa=expression(rep(8, nsubjects)),
+                                                  beta=expression(rep(300, nsubjects)),
+                                                  cost=expression(rep(0, nsubjects)))
+)
 
 parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, beta, cost, kappa), mean)
 
 out_dir <- "/Users/mnh5174/Data_Analysis/spott_modeling/data/vba_input_simulated_n80"
+#out_dir <- "/Users/mnh5174/Data_Analysis/spott_modeling/data/vba_input_simulated_n5_minimal"
 if (!dir.exists(out_dir)) { dir.create(out_dir) }
 dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -beta, -cost, -kappa)
 
@@ -101,13 +107,18 @@ task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08
 task_environment$n_timesteps <- with(task_environment, trial_length/bin_size)
 task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
 
+set.seed(100)
 #run the model at these parameter settings.
-ins_results <- ins_wins(initial_params$value, fixed=NULL, task_environment, optimize=FALSE)
+ins_results <- ins_wins(c(alpha=0.1, gamma=8, nu=0, beta=200, cost=0, kappa=2), fixed=NULL, task_environment, optimize=FALSE)
 
 #get summary statistics
 sstats <- get_sim_stats(ins_results, task_environment)
 sum_df <- sstats$sum_df
 all_df <- sstats$all_df
+
+toplot <- all_df %>% select(trial, timestep, Q_1, Q_2, choice, outcome) %>% gather(key=action, value=Q, Q_1, Q_2)
+ggplot(toplot %>% filter(trial <= 10 & choice !=0), aes(x=timestep, y=Q, color=factor(action))) + 
+  geom_line() + geom_point(aes(x=timestep, y=2-choice, color=outcome)) + facet_wrap(~trial)
 
 #simulate data for stan fitting
 test_stan_sim <- sim_data_for_stan (initial_params$value, task_environment, n=100)
@@ -120,6 +131,10 @@ parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, n
 
 readr::write_csv(stan_population, path="data/stan_population_demo_trialdata.csv.gz")
 write.csv(parmat, file="data/stan_population_demo_parameters.csv", row.names=F)
+
+#plot diagnosis
+str(stan_population)
+
 
 #repeat the same model, but in 100 environments (regenerating GRWs)
 library(doMC)
@@ -420,8 +435,8 @@ summary(lm(log_n1_n2 ~ log_p1_p2, res_combined %>% filter(kappa==4 & replication
 ggsave(ex_plot, file="figures/log_matching_scatter.pdf", width=7, height=6)
 
 
-  #stat_smooth(method="lm", formula=y ~ I(1/x), se=FALSE)
-  
+#stat_smooth(method="lm", formula=y ~ I(1/x), se=FALSE)
+
 
 
 #if we want to plot q traces, we need to gather up Q_1 and Q_2

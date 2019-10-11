@@ -16,6 +16,7 @@ is_alex=strcmp(me,'Alex')==1;
 %% set environment and define file locations
 project_repo = '~/Data_Analysis/spott_modeling';
 data_source=[project_repo, '/data/vba_input_simulated_n80'];
+%data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 addpath(genpath('~/Documents/MATLAB/VBA-toolbox'));
 addpath([project_repo, '/vba_timeseries/evo_functions']);
 addpath([project_repo, '/vba_timeseries/obs_functions']);
@@ -50,7 +51,7 @@ poolobj=parpool('local',4); %just use shared pool for now since it seems not to 
 %     'ap_null', 'ap_dynaffect', 'ap_dynaffect_hours', 'ap_dynaffect_hours_scalar', 'ap_dynaffect_homerun'};
 
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
-models = {'suuvid_nobeta'};
+models = {'suuvid_minimal'};
 
 %models = {'suuvid_base'};
 %inputfiles = inputfiles(23:26);
@@ -58,6 +59,7 @@ models = {'suuvid_nobeta'};
 for mnum = 1:length(models)
     vo=[]; %vba options structure
     vo.dataset = 'vba_sim_n80';
+    %vo.dataset = 'vba_sim_n5_minimal';
     vo.model = models{mnum};
     vo.graphics = 0; %don't display fitting interactively
     vo = validate_options(vo); %initialize and validate suuvid fitting settings

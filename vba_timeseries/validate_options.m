@@ -69,6 +69,25 @@ elseif strcmpi(vo.model, 'suuvid_fixbeta')
     vo.n_phi = 4;
     vo.phi_names = {'gamma', 'nu', 'kappa', 'cost'};
 
+elseif strcmpi(vo.model, 'suuvid_minimal')
+    vo.obs_fname = @suuvid_obs_minimal;
+    vo.beta = 200; %fix at a sane value
+    vo.kappa = 8; %fix high inverse temperature
+    vo.cost = 0; %no cost (no sticky/explore)
+
+    vo.evo_fname = @suuvid_base_evo;
+    vo.hidden_states = 2; %two-action approach for now
+    vo.state_names = {'Q1', 'Q2'};
+    
+    vo.n_outputs = 3; %two actions + no response
+    vo.y_names = {'y1', 'y2', 'none'};
+    
+    vo.n_theta=1;
+    vo.theta_names={'alpha'};
+
+    vo.n_phi = 1;
+    vo.phi_names = {'gamma'};
+    
 elseif strcmpi(vo.model, 'suuvid_nonu')
     vo.obs_fname = @suuvid_obs_nonu;
 

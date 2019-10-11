@@ -95,7 +95,10 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
         #decide which option to choose
         if (task_environment$sticky_softmax) {
           #rather than refactor the approach of current_choices[1] being chosen and [2] being unchosen, I just keep the 'swap' idea with sticky softmax
-          c_ij <- p_sticky_softmax(Q_tba[i,j,], cur_action=1, kappa=params["kappa"], cost=params["cost"])
+          #NB. We order the Q vector for this trial (i) and timestep (j) in the order of current_actions. So if action 2 is active, we place its
+          # Q value first in the vector. This allows a hard-coding of cur_action=1 (first element of c_ij is always active action) and then
+          # c_ij[2] is always unchosen.
+          c_ij <- p_sticky_softmax(Q_tba[i,j,][current_choices], cur_action=1, kappa=params["kappa"], cost=params["cost"])
           c_ij <- c_ij[2] #just keep probability of selecting unchosen action, consistent with logic below
                     
         } else {
@@ -213,6 +216,13 @@ get_sim_stats <- function(ins_results, task_environment) {
               n1_n2=sum(choice==1) / sum(choice==2),
               n1_m_n2=sum(choice==1) - sum(choice==2))
   
+  #allow for trial-varying prew: trials x choices
+  if (is.vector(task_environment$prew)) {
+    task_environment$prew <- pracma::repmat(task_environment$prew, task_environment$n_trials, 1) #if we get a vector, replicate onto rows (trials)
+  } else {
+    stopifnot(nrow(task_environment$prew) == task_environment$n_trials)
+  }
+  
   prew_df <- data.frame(task_environment$prew) %>% setNames(c("p_1", "p_2")) %>% mutate(trial=1:n()) %>%
     mutate(p1_p2=p_1/p_2)
   
@@ -228,7 +238,10 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   
   for (i in 1:n) {
     #regenerate outcomes matrix and GRWs
-    task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+    if (is.null(task_environment$prew)) {
+      task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+    }
+    
     task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))  
     
     results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
@@ -247,49 +260,81 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
 }
 
 sim_spott_free_operant_group <- function(nsubjects=50, 
-                                         parameters = list(
-                                           alpha=list(min=0.01, max=0.99, mean=0.1, sd=0.06),
-                                           gamma=list(shape=3, rate=1),
-                                           nu=list(mean=-0.5, sd=1),
-                                           beta=list(shape=4, rate=1/100),
-                                           cost=list(shape1=.2, shape2=6.5),
-                                           kappa=list(shape=3, rate=1)
-                                         ),
+                                         parameters=list(),
                                          task_environment,
                                 quiet=FALSE, seed=1050, ...) {
   
   require(truncnorm)
+  
+  # parameters = list(
+  #   alpha=list(min=0.01, max=0.99, mean=0.2, sd=0.2),
+  #   gamma=list(shape=3, rate=1),
+  #   #nu=list(mean=-0.5, sd=1),
+  #   nu=list(mean=0, sd=0),
+  #   beta=list(shape=4, rate=1/100),
+  #   cost=list(shape1=.2, shape2=6.5),
+  #   kappa=list(shape=3, rate=1)
+  # ),
+  
+  param_defaults <- list(
+    alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
+    gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
+    nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
+    beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
+    cost=expression(rnorm(nsubjects, mean=1, sd=2)), #switch cost/stickiness
+    kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
+  )
+  
+  #fill in defaults for any parameters not passed in
+  for (pname in names(param_defaults)) {
+    if (is.null(parameters[[pname]])) {
+      parameters[[pname]] <- param_defaults[[pname]]
+    }
+  }
+  
   set.seed(seed) #keep sims consistent
   
   #simulate subject parameters
   #alpha (learning rate) from truncated normal
-  alpha_subj <- rtruncnorm(nsubjects, a=parameters$alpha$min, b=parameters$alpha$max, 
-                           mean = parameters$alpha$mean, sd = parameters$alpha$sd)
-  
+  # alpha_subj <- rtruncnorm(nsubjects, a=parameters$alpha$min, b=parameters$alpha$max, 
+  #                          mean = parameters$alpha$mean, sd = parameters$alpha$sd)
+
+  alpha_subj <- eval(parameters$alpha)
+    
   #gamma (vigor sensitivity -- logistic slope) from gamma (haha) 3,1 distribution 
-  gamma_subj <- rgamma(nsubjects, shape=parameters$gamma$shape, rate=parameters$gamma$rate)
+  #gamma_subj <- rgamma(nsubjects, shape=parameters$gamma$shape, rate=parameters$gamma$rate)
+  
+  gamma_subj <- eval(parameters$gamma)
   
   #nu is basal vigor (difficulty in IRT terms), which scales the level of value in the environment needed to promote a response. sample from normal
-  nu_subj <- rnorm(nsubjects, mean=parameters$nu$mean, sd=parameters$nu$sd)
+  #nu_subj <- rnorm(nsubjects, mean=parameters$nu$mean, sd=parameters$nu$sd)
+  nu_subj <- eval(parameters$nu)
   
   #beta (motor speed) from a gamma (4, .01) distribution
-  beta_subj <- rgamma(nsubjects, shape=parameters$beta$shape, rate=parameters$beta$rate)
+  #beta_subj <- rgamma(nsubjects, shape=parameters$beta$shape, rate=parameters$beta$rate)
+  beta_subj <- eval(parameters$beta)
   
-  if (task_environment$sticky_softmax) {
-    if (!is.null(parameters$cost$shape1)) {
-      message("Switching over to Normal(1,2) prior on cost")
-      parameters$cost <- list(mean=1, sd=2)
-    }
-    
-    #cost parameter is in softmax temperature units -- sample from Gaussian centered on zero
-    cost_subj <- rnorm(nsubjects, mean=parameters$cost$mean, sd=parameters$cost$sd)
-  } else {
-    #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
-    cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
-  }
+  # if (task_environment$sticky_softmax) {
+  #   if (!is.null(parameters$cost$shape1)) {
+  #     message("Switching over to Normal(1,2) prior on cost")
+  #     parameters$cost <- list(mean=1, sd=2)
+  #   }
+  #   
+  #   #cost parameter is in softmax temperature units -- sample from Gaussian centered on zero
+  #   cost_subj <- rnorm(nsubjects, mean=parameters$cost$mean, sd=parameters$cost$sd)
+  # } else {
+  #   #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
+  #   cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
+  # }
+  # 
+  # cost_subj <- rep(0, nsubjects)
+  
+  cost_subj <- eval(parameters$cost)
   
   #kappa (softmax temperature in p_switch). Sample from gamma (3,1) distribution, as with gamma parameter
-  kappa_subj <- rgamma(nsubjects, shape=parameters$kappa$shape, rate=parameters$kappa$rate)
+  #kappa_subj <- rgamma(nsubjects, shape=parameters$kappa$shape, rate=parameters$kappa$rate)
+  
+  kappa_subj <- eval(parameters$kappa)
   
   parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, cost=cost_subj, kappa=kappa_subj)
 
