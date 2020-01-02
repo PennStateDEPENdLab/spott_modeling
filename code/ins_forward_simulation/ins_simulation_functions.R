@@ -280,7 +280,8 @@ sim_spott_free_operant_group <- function(nsubjects=50,
     alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
     gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
     nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
-    beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
+    # beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
+    beta=expression(rgamma(nsubjects, shape=50, rate=1)), #motor recovery
     cost=expression(rnorm(nsubjects, mean=1, sd=2)), #switch cost/stickiness
     kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
   )

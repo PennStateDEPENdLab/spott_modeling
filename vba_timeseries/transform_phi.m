@@ -40,6 +40,14 @@ if is_varcov || (ismatrix(phi) && ~isvector(phi))
         vars = diag(phi)'; %make sure this is a row vector
         sds_trans = sqrt([ exp(vars(1)) ]); %gamma: positive
         phi_trans = transform_covmat(phi, sds_trans); %compute covariance matrix on rescaled parameters
+    elseif ismember(inG.model, {'suuvid_kappaexponent'})
+        vars = diag(phi)'; %make sure this is a row vector
+        sds_trans = sqrt([ exp(vars(1)), ... %beta: motor speed recovery rate must be positive
+            exp(vars(2)), ... %gamma: positive
+            vars(3), ... %nu: basal vigor allowed to be positive or negative -- keep as Gaussian
+            gaminv(fastnormcdf(vars(4)), 2, 1), ... %kappa: Gamma(2,1) transform using inverse CDF approach. Use precompiled std norm cdf code for speed
+            vars(5) ]); %stickiness can be positive or negative -- keep as Gaussian); %transform the parameters to get variances, then compute SDs
+        phi_trans = transform_covmat(phi, sds_trans); %compute covariance matrix on rescaled parameters
     else
         phi_trans = phi; %just return untransformed for the moment...
     end
@@ -75,6 +83,14 @@ else
         
     elseif ismember(inG.model, {'suuvid_minimal'})
         phi_trans = [ exp(phi(1)) ]; %gamma: positive
+        
+    elseif strcmpi(inG.model, 'suuvid_kappaexponent')
+        phi_trans = [ exp(phi(1)); ... %beta: motor speed recovery rate must be positive
+            exp(phi(2)); ... %gamma: positive
+            phi(3); ... %nu: basal vigor allowed to be positive or negative -- keep as Gaussian
+            gaminv(fastnormcdf(phi(4)), 2, 1); ... %kappa: Gamma(2,1) transform using inverse CDF approach. Use precompiled std norm cdf code for speed
+            phi(5) ... %stickiness can be positive or negative -- keep as Gaussian
+            ];
 
     else
         error(['unrecognized model in transform_phi: ', inG.model]);
