@@ -24,117 +24,31 @@ if isfield(vo, 'model')
 else
     vo.model=getenv('model');
     if strcmpi(vo.model, '')
-        vo.model = 'suuvid_base';
+        vo.model = 'time2pl';
+    end
+end
+
+% setup parallel parameters
+if isfield(vo, 'do_parallel') && vo.do_parallel == true
+    if ~isfield(vo, 'matlab_cpus')
+        fprintf('Using user-specified matlab_cpus = %d for parallel execution. Ignoring matlab_cpus environment variable\n', vo.matlab_cpus);
+    else
+        
+        ncpus=getenv('matlab_cpus');
+        if strcmpi(ncpus, '')
+            ncpus=4;
+            fprintf('defaulting to 40 cpus because matlab_cpus not set\n');
+        else
+            ncpus=str2double(ncpus);
+        end
+        
+        poolobj=parpool('local',ncpus); %just use shared pool for now since it seems not to matter (no collisions)
     end
 end
 
 if ~isfield(vo, 'multisession'), vo.multisession=0; end
-%if ~isfield(vo, 'fixed_params_across_days'), vo.fixed_params_across_days=1; end
 if ~isfield(vo, 'graphics'), vo.graphics=0; end
-if ~isfield(vo, 'model'), vo.model='suuvid_base'; end
 if ~isfield(vo, 'saveresults'), vo.saveresults=0; end %used in some places to denote whether to save fitted outputs
 
-
-%hidden states field used to index hidden state vector inside evolution and observation functions
-% if strcmpi(vo.model,'suuvid_base')
-%     vo.obs_fname = @suuvid_obs;
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 5;
-%     vo.phi_names = {'beta', 'gamma', 'nu', 'kappa', 'cost'};
-%     
-% elseif strcmpi(vo.model,'suuvid_kappaexponent')
-%     vo.obs_fname = @suuvid_obs_kappaexponent;
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 5;
-%     vo.phi_names = {'beta', 'gamma', 'nu', 'kappa', 'cost'};
-% 
-% elseif strcmpi(vo.model, 'suuvid_fixbeta')
-%     vo.obs_fname = @suuvid_obs_fixbeta;
-%     vo.beta = 30; %fix at a sane value
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 4;
-%     vo.phi_names = {'gamma', 'nu', 'kappa', 'cost'};
-% 
-% elseif strcmpi(vo.model, 'suuvid_minimal')
-%     vo.obs_fname = @suuvid_obs_minimal;
-%     vo.beta = 30; %fix at a sane value
-%     vo.kappa = 8; %fix high inverse temperature
-%     vo.cost = 0; %no cost (no sticky/explore)
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 1;
-%     vo.phi_names = {'gamma'};
-%     
-% elseif strcmpi(vo.model, 'suuvid_nonu')
-%     vo.obs_fname = @suuvid_obs_nonu;
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 4;
-%     vo.phi_names = {'beta', 'gamma', 'kappa', 'cost'};
-% 
-% elseif strcmpi(vo.model, 'suuvid_nobeta')
-%     vo.obs_fname = @suuvid_obs_nobeta;
-% 
-%     vo.evo_fname = @suuvid_base_evo;
-%     vo.hidden_states = 2; %two-action approach for now
-%     vo.state_names = {'Q1', 'Q2'};
-%     
-%     vo.n_outputs = 3; %two actions + no response
-%     vo.y_names = {'y1', 'y2', 'none'};
-%     
-%     vo.n_theta=1;
-%     vo.theta_names={'alpha'};
-% 
-%     vo.n_phi = 4;
-%     vo.phi_names = {'gamma', 'nu', 'kappa', 'cost'};
-% end
 
 end

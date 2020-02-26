@@ -1,4 +1,4 @@
-function  [ gx ] = m_suuvid_obs_zetaexponent(Xt, phi, u, inG)
+function  [ gx ] = m_suuvid_obs_notime(Xt, phi, u, inG)
 % INPUT
 % - x_t : hidden states (weights of basis functions)
 % - phi : temperature (1x1)
@@ -8,24 +8,20 @@ function  [ gx ] = m_suuvid_obs_zetaexponent(Xt, phi, u, inG)
 % - gx : p(chosen|x_t)
 
 phi = transform_phi(phi, inG);
-beta = phi(1); %motor speed recovery rate
-gamma = phi(2); %slope on vigor logistic (sensitivity)
-nu = phi(3); %basal vigor
-kappa = phi(4); %softmax temperature
-omega = phi(5); %stickiness
+gamma = phi(1); %slope on vigor logistic (sensitivity)
+nu = phi(2); %basal vigor
+kappa = phi(3); %softmax temperature
+omega = phi(4); %stickiness
 
-tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
 
 n_actions = inG.hidden_states;
-%zetaexp = 1/(1 + exp(-beta * tdiff));   
-zetaexp = 1 - exp(-tdiff/beta);   
 
 Qcur = Xt(1:n_actions);
 Qtot = sum(Qcur); %total value
 
-%probability of responding at all
-p_respond = 1/(1 + exp(-gamma * (Qtot + nu^zetaexp)));
+%probability of responding at all: pure 2PL
+p_respond = 1/(1 + exp(-gamma * (Qtot + nu)));
 
 %which action to choose
 

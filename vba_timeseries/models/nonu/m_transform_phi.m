@@ -1,4 +1,4 @@
-function [phi_trans] = m_transform_phi(phi)
+function [phi_trans] = m_transform_phi(phi, inG)
 % Parameter transformation function for parameters in phi (observation function)
 
 phi_trans = [ exp(phi(1)); ... %beta: motor speed recovery rate must be positive

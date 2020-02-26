@@ -11,7 +11,6 @@ is_alex=strcmp(me,'Alex')==1;
 
 %note that this function looks for 'dataset' and 'model'
 %as environment variables so that this script can be scaled easily for batch processing
-%vo.model='decay_factorize_selective_psequate_fixedparams';
 
 %% set environment and define file locations
 project_repo = '~/Data_Analysis/spott_modeling';
@@ -24,10 +23,6 @@ addpath(mh_vba_path); %add MH VBA helpers (e.g., extract_group_statistics)
 
 vba_path = '~/Documents/MATLAB/VBA-toolbox';
 addpath(genpath_safe(vba_path)); %add VBA functions
-
-
-%addpath([project_repo, '/vba_timeseries/evo_functions']);
-%addpath([project_repo, '/vba_timeseries/obs_functions']);
 
 vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
 models_dir = [ vba_working_dir, filesep, 'models' ];
@@ -49,26 +44,14 @@ inputfiles = arrayfun(@(x) fullfile(x.folder, x.name), inputfiles, 'UniformOutpu
 %inputfiles = inputfiles(filter_vec);
 %ids = ids(filter_vec);
 
-%% setup parallel parameters
-% ncpus=getenv('matlab_cpus');
-% if strcmpi(ncpus, '')
-%   ncpus=40;
-%   fprintf('defaulting to 40 cpus because matlab_cpus not set\n');
-% else
-%   ncpus=str2double(ncpus);
-% end
-%
-
-%poolobj=parpool('local',4); %just use shared pool for now since it seems not to matter (no collisions)
-
 %p = ProgressBar(length(inputfiles));
 % models = {'ap', 'ap_ravg', 'ap_dayonly', 'ap_dayonly_nest', 'ap_hours', ...
 %     'ap_null', 'ap_dynaffect', 'ap_dynaffect_hours', 'ap_dynaffect_hours_scalar', 'ap_dynaffect_homerun'};
 
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
-models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
+%models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
+models = {'time2pl', 'notime', 'zetaexponent'};
 
-%models = {'suuvid_base'};
 %inputfiles = inputfiles(23:26);
 
 for mnum = 1:length(models)
@@ -139,11 +122,3 @@ end
 
 %p.stop;
 %delete(poolobj);
-
-
-%doesn't work in recent MATLAB
-
- %parsave(sprintf('%s/fit_%s_%s_multinomial%d_multisession%d_fixedparams%d_uaversion%d', ...
-        %		  vo.output_dir, ids{sub}, vo.model, vo.multinomial, vo.multisession, ...
-        %    vo.fixed_params_across_runs, vo.u_aversion), posterior, out);%, subj_id);
-       
