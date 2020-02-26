@@ -1,0 +1,44 @@
+function  [ gx ] = m_obs_function(Xt, phi, u, inG)
+% INPUT
+% - x_t : hidden states (weights of basis functions)
+% - phi : temperature (1x1)
+% - u   : imput vector (not used in observation)
+% - inG : multinomial
+% OUTPUT
+% - gx : p(chosen|x_t)
+
+phi = transform_phi(phi, inG);
+beta = phi(1); %motor speed recovery rate
+gamma = phi(2); %slope on vigor logistic (sensitivity)
+nu = phi(3); %basal vigor
+kappa = phi(4); %softmax temperature
+cost = phi(5); %stickiness
+
+tdiff = u(4); %cross-check position in u
+active_action = u(5); %cross-check position in u
+
+n_actions = inG.hidden_states;
+kappaexp = 1/(1 + exp(-beta * tdiff));   
+
+Qcur = Xt(1:n_actions);
+Qtot = sum(Qcur); %total value
+
+%probability of responding at all
+p_respond = 1/(1 + exp(-gamma * (Qtot + nu^kappaexp)));
+
+%which action to choose
+
+cc = zeros(n_actions,1); %row vector, as with Q
+if active_action > 0 %will be zero before an action is chosen in a trial
+    cc(active_action) = 1; %populate current action to capture stickiness
+end
+
+%Lau and Glimcher 2005
+m = kappa*Qcur + cost*cc;
+
+m = m - max(m); %rescale for avoiding floating point overflow
+p_which = exp(m)/sum(exp(m));
+
+gx = [p_which * p_respond; 1 - p_respond]; %predicted probabilities
+
+end
