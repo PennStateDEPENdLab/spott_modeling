@@ -1,4 +1,4 @@
-function  [fx] = m_evo_function(Xt, theta, u, inF)
+function  [fx] = m_suuvid_evo_base(Xt, theta, u, inF)
 % evolution function of basic suuvid model
 %
 %

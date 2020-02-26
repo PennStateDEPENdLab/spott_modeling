@@ -12,7 +12,7 @@ beta = inG.beta; %motor speed recovery rate
 gamma = phi(1); %slope on vigor logistic (sensitivity)
 nu = phi(2); %basal vigor
 kappa = phi(3); %softmax temperature
-cost = phi(4); %stickiness
+omega = phi(4); %stickiness
 
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
@@ -34,7 +34,7 @@ if active_action > 0 %will be zero before an action is chosen in a trial
 end
 
 %Lau and Glimcher 2005
-m = kappa*Qcur + cost*cc;
+m = kappa*Qcur + omega*cc;
 
 m = m - max(m); %rescale for avoiding floating point overflow
 p_which = exp(m)/sum(exp(m));

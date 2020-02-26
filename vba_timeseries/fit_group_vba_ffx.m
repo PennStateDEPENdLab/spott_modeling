@@ -18,12 +18,20 @@ project_repo = '~/Data_Analysis/spott_modeling';
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source=[project_repo, '/data/vba_input_Updated'];
-addpath(genpath('~/Documents/MATLAB/VBA-toolbox'));
+
+mh_vba_path='/Users/mnh5174/Data_Analysis/mh_vba'; %MH helper scripts
+addpath(mh_vba_path); %add MH VBA helpers (e.g., extract_group_statistics)
+
+vba_path = '~/Documents/MATLAB/VBA-toolbox';
+addpath(genpath_safe(vba_path)); %add VBA functions
+
+
 %addpath([project_repo, '/vba_timeseries/evo_functions']);
 %addpath([project_repo, '/vba_timeseries/obs_functions']);
 
 vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
 models_dir = [ vba_working_dir, filesep, 'models' ];
+addpath(models_dir); %shared functions across models can live in models root
 
 if ~exist(models_dir, 'dir'), error('cannot locate the models directory for setup'); end
 
@@ -58,7 +66,7 @@ inputfiles = arrayfun(@(x) fullfile(x.folder, x.name), inputfiles, 'UniformOutpu
 %     'ap_null', 'ap_dynaffect', 'ap_dynaffect_hours', 'ap_dynaffect_hours_scalar', 'ap_dynaffect_homerun'};
 
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
-models = {'suuvid_kappaexponent'};
+models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
 
 %models = {'suuvid_base'};
 %inputfiles = inputfiles(23:26);

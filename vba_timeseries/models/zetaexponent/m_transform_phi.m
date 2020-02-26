@@ -5,7 +5,7 @@ phi_trans = [ exp(phi(1)); ... %beta: motor speed recovery rate must be positive
             exp(phi(2)); ... %gamma: positive
             phi(3); ... %nu: basal vigor allowed to be positive or negative -- keep as Gaussian
             gaminv(fastnormcdf(phi(4)), 2, 1); ... %kappa: Gamma(2,1) transform using inverse CDF approach. Use precompiled std norm cdf code for speed
-            phi(5) ... %stickiness can be positive or negative -- keep as Gaussian
+            phi(5) ... %omega stickiness can be positive or negative -- keep as Gaussian
             ];
 
 end

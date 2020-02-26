@@ -12,19 +12,19 @@ beta = phi(1); %motor speed recovery rate
 gamma = phi(2); %slope on vigor logistic (sensitivity)
 nu = phi(3); %basal vigor
 kappa = phi(4); %softmax temperature
-cost = phi(5); %stickiness
+omega = phi(5); %stickiness
 
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
 
 n_actions = inG.hidden_states;
-kappaexp = 1/(1 + exp(-beta * tdiff));   
+zetaexp = 1/(1 + exp(-beta * tdiff));   
 
 Qcur = Xt(1:n_actions);
 Qtot = sum(Qcur); %total value
 
 %probability of responding at all
-p_respond = 1/(1 + exp(-gamma * (Qtot + nu^kappaexp)));
+p_respond = 1/(1 + exp(-gamma * (Qtot + nu^zetaexp)));
 
 %which action to choose
 
@@ -34,7 +34,7 @@ if active_action > 0 %will be zero before an action is chosen in a trial
 end
 
 %Lau and Glimcher 2005
-m = kappa*Qcur + cost*cc;
+m = kappa*Qcur + omega*cc;
 
 m = m - max(m); %rescale for avoiding floating point overflow
 p_which = exp(m)/sum(exp(m));

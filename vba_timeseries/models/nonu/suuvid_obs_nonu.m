@@ -1,4 +1,4 @@
-function  [ gx ] = suuvid_obs_nonu_nobeta(Xt, phi, u, inG)
+function  [ gx ] = suuvid_obs_nonu(Xt, phi, u, inG)
 % INPUT
 % - x_t : hidden states (weights of basis functions)
 % - phi : temperature (1x1)
@@ -8,10 +8,10 @@ function  [ gx ] = suuvid_obs_nonu_nobeta(Xt, phi, u, inG)
 % - gx : p(chosen|x_t)
 
 phi = transform_phi(phi, inG);
-beta = 150; %motor speed recovery rate
+beta = phi(1); %motor speed recovery rate
 gamma = phi(2); %slope on vigor logistic (sensitivity)
 kappa = phi(3); %softmax temperature
-cost = phi(4); %stickiness
+omega = phi(4); %stickiness
 
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
@@ -34,7 +34,7 @@ end
 
 
 %Lau and Glimcher 2005
-m = kappa*Qcur + cost*cc;
+m = kappa*Qcur + omega*cc;
 
 m = m - max(m); %rescale for avoiding floating point overflow
 p_which = exp(m)/sum(exp(m));
