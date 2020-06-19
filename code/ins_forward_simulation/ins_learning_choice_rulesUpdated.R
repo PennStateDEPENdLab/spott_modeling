@@ -9,17 +9,12 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=2, nu=1, beta=1, eta=1) {
   #nu is basal vigor (difficulty in IRT terms) that scales the total value in the environment at which p(response) is 0.5 (i.e., Qstar - nu=0)
   #beta is the recovery rate for motor speed. Higher values lead to slower recovery (lower maximum numerator in response function)
   #eta is not currently used because it could compete with nu (future direction)
-  
+
   Qstar <- sum(Q)/eta #total environmental value
   
-  #phi <- 1 - exp(-(tau - rtlast)/beta) #recovery function (motor speed)
-  
-  kappaexp <- 1 /(1 + exp(-beta*(tau - rtlast))) 
-  
-  #_tb denotes (t)rial, time (b)in
-  # p_respond_tb <- phi / (1+exp(-gamma*(Qstar + nu))) #probability of making a response in this bin
-  
-  p_respond_tb <- 1 / (1 + exp(-gamma*(Qstar + nu^kappaexp))) #probability of making a response in this bin
+  tdiffsec = (tau - rtlast)/1000
+  p_respond_tb <- 1 / (1 + exp(-gamma*Qstar*(tdiffsec-nu))) #probability of making a response in this bin
+ 
   return(p_respond_tb)
 }
 
@@ -28,12 +23,12 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=2, nu=1, beta=1, eta=1) {
 # scalar switch (cost)
 # chosen action (Q_c)
 # 10/2018 update: convert cost into a 0..1 probability treated outside of the softmax
-p_switch <- function(Q_c, Q_u, kappa, cost) { 
-  ps <- (1 / (1 + exp(-1*kappa*(Q_u - Q_c) ))) - cost
-  if (ps > 1) { ps <- 1 #enforce 0..1 boundaries after accounting for cost
-  } else if (ps < 0) { ps <- 0 }
-  return(ps)
-}
+# p_switch <- function(Q_c, Q_u, kappa, cost) {
+#   ps <- (1 / (1 + exp(-1*kappa*(Q_u - Q_c) ))) - cost
+#   if (ps > 1) { ps <- 1 #enforce 0..1 boundaries after accounting for cost
+#   } else if (ps < 0) { ps <- 0 }
+#   return(ps)
+# }
 
 p_sticky_softmax <- function(Q, cur_action, kappa, cost) {
   stopifnot(length(Q) > 1)
@@ -50,6 +45,7 @@ p_sticky_softmax <- function(Q, cur_action, kappa, cost) {
   p_which <- exp(m)/sum(exp(m))
   return(p_which)
 }
+
 
 #learning rule
 # options for variants:

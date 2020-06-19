@@ -24,6 +24,7 @@ options.GnTolFun = 1e-6;
 options.GnMaxIter = 64;
 
 options.verbose = 1; %don't show single subject fitting process
+options.kernelSize = 0;
 
 n_t = size(data,1); %number of rows
 

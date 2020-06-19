@@ -21,7 +21,7 @@ initial_params <- list(
 
 task_environment <- list(
   #prew=c(0.8,0.2), #for constant probs
-  n_trials=60,
+  n_trials=200,
   trial_length=6000, #6 seconds
   bin_size=50,
   sticky_softmax=TRUE
@@ -32,7 +32,7 @@ task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08
 
 #simulate random uniform numbers that control the environment
 #this needs to be constant in optimization so that the cost function is on the same scale across iterations
-#random numbers on choices for trials and timesteps. Last dim is p_response, p_switch, outcome (three points at which outputs are probabilistic)
+#random numbers on choices for trials and timesteps. Last dim is p_response, p_switch, outcome (  three points at which outputs are probabilistic)
 task_environment$n_timesteps <- with(task_environment, trial_length/bin_size)
 task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))
 
@@ -52,9 +52,11 @@ stan_population <- sim_spott_free_operant_group(nsubjects=20, task_environment =
                                                 parameters=list( #use this list to provide expressions that are evaluated to generate group parameter distributions
                                                   kappa=expression(rnorm(nsubjects, 10, 1)),
                                                   beta=expression(rnorm(nsubjects, 1, .1)),
-                                                  cost=expression(runif(nsubjects, 0, 3)),
-                                                  nu=expression(runif(nsubjects, 0, 3)))
+                                                  cost=expression(rnorm(nsubjects, 1.5, .3)),
+                                                  gamma=expression(rnorm(nsubjects, 1, .3)),
+                                                  nu=expression(rnorm(nsubjects, .12, .03)))
 )
+
 
 # stan_population <- sim_spott_free_operant_group(nsubjects=20, task_environment = task_environment,
 #                                                 parameters=list( #use this list to provide expressions that are evaluated to generate group parameter distributions
@@ -65,7 +67,7 @@ stan_population <- sim_spott_free_operant_group(nsubjects=20, task_environment =
 
 parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, beta, cost, kappa), mean)
 
-out_dir <- "c:/Users/zzo1/Dropbox/GitLAb/spott_modeling/spott_modeling/data/vba_input_Updated"
+out_dir <- "c:/Users/zzo1/Dropbox/GitLAb/spott_modeling/spott_modeling/data/vba_input_twoPL17"
 #out_dir <- "/Users/mnh5174/Data_Analysis/spott_modeling/data/vba_input_simulated_n5_minimal"
 if (!dir.exists(out_dir)) { dir.create(out_dir) }
 dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -beta, -cost, -kappa)
@@ -77,7 +79,7 @@ sapply(1:length(dsplit), function(d) {
   write.csv(data, file=file.path(out_dir, sprintf("%03s_spott_20.csv", id)), row.names=F)
 })
 
-#readr::write_csv(stan_population, path="data/stan_population_demo_trialdata.csv.gz")
+readr::write_csv(stan_population, path="stan_population_demo_trialdata.csv")
 write.csv(parmat, file=file.path(out_dir, "stan_population_demo_parameters.csv"), row.names=F)
 
 
