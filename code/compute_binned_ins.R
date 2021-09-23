@@ -1,5 +1,5 @@
 #compute binned behavior on ins blocks
-setwd("~/Box Sync/DEPENd/PANDAA/Data/Subject ID folders")
+setwd("~/Box/DEPENd/PANDAA/Data/Raw/Subject ID folders")
 insfiles <- grep("_bad", list.files(pattern=".*insblock.csv", recursive=TRUE), value = TRUE, invert = TRUE)
 library(dplyr)
 library(reshape2)
@@ -10,7 +10,7 @@ allins <- c()
 allold <- c()
 for (f in insfiles) {
   df <- read.csv(f, stringsAsFactors = FALSE)
-  id <- sub(".*/(\\d+)_insblock.csv", "\\1", f, perl=TRUE)
+  id <- as.numeric(sub(".*/(\\d+)_insblock.csv", "\\1", f, perl=TRUE))
   df$id <- id
   #if (! "trialstart_vblt" %in% names(df) ) {
   if ("buttonA" %in% names(df) ) { #this seems to be the right differentiator
@@ -56,7 +56,7 @@ filter(allins, is.na(outcome)) %>% select(id, instrial, eventNumber, key, nextke
 allins <- allins %>% filter(key!="") %>% mutate(switch=if_else(outcome==-1, 1, 0), outcome=if_else(outcome==-1, 0, outcome))
 
 allins %>% group_by(id) %>% dplyr::summarize(sum(outcome, na.rm=T)) %>% print(n=100) #generally hitting the ~72 target. Variation reflects that we don't terminate the trial immediately (give full 6s)
-allins %>% group_by(id) %>% dplyr::summarize(sumrewards=sum(outcome, na.rm=T)) %>% describe() #generally hitting the ~72 target. Variation reflects that we don't terminate the trial immediately (give full 6s)
+allins %>% group_by(id) %>% dplyr::summarize(sumrewards=sum(outcome, na.rm=T)) %>% psych::describe() #generally hitting the ~72 target. Variation reflects that we don't terminate the trial immediately (give full 6s)
 
 prop.table(table(allins$outcome)) #0 = no win, 1 = win, -1 = switch. Looks like we get the 80/20 population probabilities (that's good!)
 prop.table(table(allins$switch)) #5% switches
@@ -96,7 +96,7 @@ master_bins_50 <- expand.grid(id=unique(allins$id), instrial=unique(allins$instr
 allins_binned_50 <- left_join(master_bins_50, allins_binned_50, by=c("id", "instrial", "latency_bin")) %>%
   group_by(id, instrial) %>% filter(sum(npress, na.rm=TRUE) > 0) %>% ungroup() %>%
   arrange(id, instrial, latency_bin) %>% filter(!is.na(latency_bin)) %>%
-  mutate_at(vars(key, npress, nreward, switch), funs(if_else(is.na(.), 0, .)))
+  mutate_at(vars(key, npress, nreward, switch), list(~if_else(is.na(.), 0, .)))
 
 #note some subject don't have presses in the first trials
 #xtabs(~id + instrial, allins_binned_combined)
@@ -165,8 +165,10 @@ allins_binned_50 <- allins_binned_50 %>% group_by(id, instrial) %>% do({
   
   curkey <- 0
   lastrt <- 0 #the start of the trial (time = 0) is treated as last rt. thus, tdiff accumulates up to first button press
-  firstkey <- df$key[df$key > 0][1] #give the model the first press (i.e., give the model a bit of clairvoyance wrt the subject's first choice)
-  curkey <- firstkey
+  
+  #2020: remove clairvoyance of model in giving it subject's first choice. Otherwise, model predicts ramping up toward the choice
+  #firstkey <- df$key[df$key > 0][1] #give the model the first press (i.e., give the model a bit of clairvoyance wrt the subject's first choice)
+  #curkey <- firstkey
   for (i in 1:nrow(df)) {
     if (df$key[i] != 0 && df$key[i] != curkey ) {
       curkey <- df$key[i]
@@ -199,15 +201,26 @@ pdf(file = "spott_irt_density_by_sub.pdf", width = 6, height = 6)
 ggplot(filter(allins, irt<500), aes(x = irt)) + geom_density(adjust = 2) + facet_wrap(~id)
 dev.off()
 
-outdir <- "~/Data_Analysis/SPOTT/stan_modeling"
+outdir <- "~/Data_Analysis/spott_modeling/data"
 write.csv(allins_binned_300, file=file.path(outdir, "allins_binned_300_long.csv"), row.names=FALSE)
 write.csv(allins_binned_300_wide, file=file.path(outdir, "allins_binned_300_wide.csv"), row.names=FALSE)
 
 write.csv(allins_binned_400, file=file.path(outdir, "allins_binned_400_long.csv"), row.names=FALSE)
 write.csv(allins_binned_400_wide, file=file.path(outdir, "allins_binned_400_wide.csv"), row.names=FALSE)
 
-write.csv(allins_binned_50, file=file.path(outdir, "allins_binned_50_long.csv"), row.names=FALSE)
+write.csv(allins_binned_50, file=file.path(outdir, "pandaa_allins_binned_50_long.csv"), row.names=FALSE)
 write.csv(allins_binned_50_wide, file=file.path(outdir, "allins_binned_50_wide.csv"), row.names=FALSE)
+
+#per subject splits for VBA
+out_dir <- "/Users/mnh5174/Data_Analysis/spott_modeling/data/pandaa_vba_input"
+if (!dir.exists(out_dir)) { dir.create(out_dir) }
+dsplit <- split(allins_binned_50, allins_binned_50$id)
+sapply(1:length(dsplit), function(d) {
+  id <- names(dsplit)[d]
+  data <- dsplit[[d]]
+  write.csv(data, file=file.path(out_dir, sprintf("%03s_spott_50.csv", id)), row.names=F)
+})
+
 
 write.csv(allins, file=file.path(outdir, "allins.csv"), row.names=FALSE)
 length(unique(allins$id))

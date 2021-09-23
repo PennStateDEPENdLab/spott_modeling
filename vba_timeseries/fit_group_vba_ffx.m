@@ -4,10 +4,9 @@ close all;
 clear;
 %curpath = fileparts(mfilename('fullpath'));
 
-os = computer;
-[~, me] = system('whoami');
-me = strtrim(me);
-is_alex=strcmp(me,'Alex')==1;
+%vo=[];
+%[vo, poolobj, behavfiles] = spott_setup_environment(vo);
+
 
 %note that this function looks for 'dataset' and 'model'
 %as environment variables so that this script can be scaled easily for batch processing
@@ -18,11 +17,6 @@ project_repo = '~/Data_Analysis/spott_modeling';
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source=[project_repo, '/data/vba_input_Updated'];
 
-mh_vba_path='/Users/mnh5174/Data_Analysis/mh_vba'; %MH helper scripts
-addpath(mh_vba_path); %add MH VBA helpers (e.g., extract_group_statistics)
-
-vba_path = '~/Documents/MATLAB/VBA-toolbox';
-addpath(genpath_safe(vba_path)); %add VBA functions
 
 vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
 models_dir = [ vba_working_dir, filesep, 'models' ];

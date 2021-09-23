@@ -25,6 +25,8 @@ else
     vo.model=getenv('model');
     if strcmpi(vo.model, '')
         vo.model = 'time2pl';
+    else
+        
     end
 end
 
