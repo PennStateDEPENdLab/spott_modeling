@@ -3,10 +3,10 @@
 # Use 2pl-type approach for computing the probability of emitting a response.
 # This variant is based on the total Q (value) being the 'latent ability' (theta) in IRT terms,
 # \nu (basal vigor) as difficulty, and \gamma (vigor sensitivity) as discriminability.
-p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=1, nu=1, beta=1e-10, eta=1) {
+p_response <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1, beta=1e-10, eta=1) {
   # Q is a vector of the values of available actions on this trial
   # tau is the current moment in time (or center of the current time bin)
-  # rtlast is the time of the last response
+  # rt_last is the time of the last response
   # gamma is vigor sensitivity, essentially scaling the steepness of the response function with changes in value
   #   Default value of gamma (1) means that the model simplifies to 1*(Qstar+nu) if we want one less parameter
   # nu is basal vigor (difficulty in IRT terms) that scales the total value in the environment at which 
@@ -18,7 +18,7 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=1, nu=1, beta=1e-10, eta=
 
   Qstar <- sum(Q)/eta #total environmental value
 
-  phi <- 1 - exp(-(tau - rtlast)/beta) #recovery function (motor speed)
+  phi <- 1 - exp(-(tau - rt_last)/beta) #recovery function (motor speed)
 
   #_tb denotes (t)rial, time (b)in
   p_respond_tb <- phi / (1+exp(-gamma*(Qstar + nu))) #probability of making a response in this bin
@@ -28,10 +28,10 @@ p_response <- function(Q, tau=NULL, rtlast=NULL, gamma=1, nu=1, beta=1e-10, eta=
 # This variant of the 2PL response probability uses the time since the last response (tdiff) to scale the
 # probability of responding. In this view, time elapsed is 'latent ability' (theta), meaning that higher values
 # push the logistic function toward higher probability.
-p_response_tdiff <- function(Q, tau=NULL, rtlast=NULL, gamma=1, nu=1, beta=1e-10, eta=1, no_Q=FALSE) {
+p_response_tdiff <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1, beta=1e-10, eta=1, no_Q=FALSE) {
   # Q is a vector of the values of available actions on this trial
   # tau is the current moment in time (or center of the current time bin)
-  # rtlast is the time of the last response
+  # rt_last is the time of the last response
   # gamma is vigor sensitivity, essentially scaling the steepness of the response function with changes in time elapsed
   #   Default value of gamma (1) means that the model simplifies to -Qstar*(tdiff-nu) if we want one less parameter
   # nu is basal vigor (difficulty in IRT terms) that specifies the time elapsed since last response at which
@@ -48,9 +48,9 @@ p_response_tdiff <- function(Q, tau=NULL, rtlast=NULL, gamma=1, nu=1, beta=1e-10
     Qstar <- sum(Q)/eta #total environmental value 
   }
   
-  phi <- 1 - exp(-(tau - rtlast)/beta) #recovery function (motor speed)
+  phi <- 1 - exp(-(tau - rt_last)/beta) #recovery function (motor speed)
   
-  tdiff = (tau - rtlast)/1000 # rescale parameters in seconds (avoid crazy values)
+  tdiff = (tau - rt_last)/1000 # rescale parameters in seconds (avoid crazy values)
   
   p_respond_tb <- phi / (1 + exp(-gamma*Qstar*(tdiff-nu))) #probability of making a response in this bin
   return(p_respond_tb)
@@ -75,13 +75,13 @@ p_sticky_softmax <- function(Q, cur_action, kappa, omega) {
   
   m <- kappa*Q + omega*cc
   
-  m <- m - max(m) #avoid floating point overflow
+  m <- m - max(m) # avoid floating point overflow
   
-  p_which <- exp(m)/sum(exp(m))
+  p_which <- exp(m)/sum(exp(m)) # standard Boltzmann softmax
   return(p_which)
 }
 
-#learning rule
+# simple delta learning rule
 # options for variants:
 # - decay of unchosen action (probably not plausible in small state space)
 # - asymmetric learning rate for wins and losses

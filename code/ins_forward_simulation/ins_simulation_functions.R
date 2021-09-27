@@ -53,21 +53,22 @@ split_free_fixed <- function(params, fixed=NULL) {
 #this is the main worker to simulate model earnings and performance in a given environment
 #if optimize=TRUE, only the (negative) earnings are returned as the objective function
 #if optimize=FALSE, the model outputs at the current parameters are provided in a list
-ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
+ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, prior_Q=0) {
   params <- c(params, fixed) #add any fixed parameters to named vector
+  
+  model <- task_environment$model
   prew <- task_environment$prew
   n_trials <- task_environment$n_trials
-  trial_length <- task_environment$trial_length
-  bin_size <- task_environment$bin_size
+  trial_ms <- task_environment$trial_ms
+  bin_ms <- task_environment$bin_ms
   outcomes <- task_environment$outcomes
+  rand_p_which <- task_environment$rand_p_which
+  rand_p_reward <- task_environment$rand_p_reward
+  rand_p_respond <- task_environment$rand_p_respond
   n_timesteps <- task_environment$n_timesteps #I have confounded thinking between bins and timesteps...
-  if (is.null(task_environment$sticky_softmax)) {
-    message("Defaulting to p_switch instead of sticky_softmax")
-    task_environment$sticky_softmax <- FALSE
-  }
   choices <- matrix(0, nrow=n_trials, ncol=n_timesteps)
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
-  time_vec <- seq(0, trial_length, by=bin_size)
+  time_vec <- seq(0, trial_ms, by=bin_ms)
   
   #allow for trial-varying prew: trials x choices
   if (is.vector(prew)) {
@@ -78,47 +79,79 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
     all_choices <- 1:ncol(prew) #assume we have an ntrials x nchoices reward matrix
   } #handle within trial variation?
   
-  current_choices <- sample(all_choices, 2) #first element is chosen, second is unchosen. there has to be an initial chosen action (even if not emitted)
+  active_action <- sample(all_choices, 2) #first element is chosen, second is unchosen. there has to be an initial chosen action (even if not emitted)
   #inactive_choice <- all_choices[all_choices != active_choice]
   Q_tba = array(NA_real_, dim=c(n_trials, n_timesteps, length(all_choices))) #zero priors on first trial + timestep
-  Q_tba[1,,] <- 0
+  Q_tba[1,,] <- prior_Q
+  
+  # setup local function for p_response based on model
+  if (model %in% c("main", "nobeta", "nonu")) {
+    loc_presp <- function(Q, tau, rt_last) {
+      p_response(Q, tau = tau, rt_last = rt_last,
+                 gamma=params["gamma"], nu=params["nu"], beta=params["beta"])  
+    }
+  } else if (model %in% c("time2pl")) {
+    loc_presp <- function(Q, tau, rt_last) {
+      p_response_tdiff(
+        Q, tau=time_vec[j], rt_last = rt_last, 
+        gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=FALSE)  
+    }
+  } else if (model == "time2pl_noQ") {
+    loc_presp <- function(Q, tau, rt_last) {
+      p_response_tdiff(
+        Q, tau=time_vec[j], rt_last = rt_last, 
+        gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=TRUE)
+    }
+  } else if (model == "notime") {
+    stop("Not implement")
+  }
   
   #loop over trials and timesteps
   for (i in 1:n_trials) {
     rt_last <- 0 #reset trial start
     for (j in 1:n_timesteps) {
-      emit_response <- p_response(Q_tba[i,j,], tau = time_vec[j], rtlast = rt_last, gamma=params["gamma"], nu=params["nu"], beta=params["beta"])
-      
+      emit_response <- loc_presp(Q_tba[i,j,], tau = time_vec[j], rt_last = rt_last)
+
       #decide whether to emit a response
-      if (emit_response > outcomes[i,j,1]) {
+      if (emit_response > rand_p_respond[i,j]) {
+        p_ij <- p_sticky_softmax(Q_tba[i,j,], cur_action=active_action, kappa=params["kappa"], omega=params["omega"])
+        set.seed(rand_p_which[i,j])
+        c_ij <- sample(all_choices, size=1, prob=p_ij)
         
-        #decide which option to choose
-        if (task_environment$sticky_softmax) {
-          #rather than refactor the approach of current_choices[1] being chosen and [2] being unchosen, I just keep the 'swap' idea with sticky softmax
-          #NB. We order the Q vector for this trial (i) and timestep (j) in the order of current_actions. So if action 2 is active, we place its
-          # Q value first in the vector. This allows a hard-coding of cur_action=1 (first element of c_ij is always active action) and then
-          # c_ij[2] is always unchosen.
-          c_ij <- p_sticky_softmax(Q_tba[i,j,][current_choices], cur_action=1, kappa=params["kappa"], cost=params["cost"])
-          c_ij <- c_ij[2] #just keep probability of selecting unchosen action, consistent with logic below
-                    
-        } else {
-          c_ij <- p_switch(Q_c=Q_tba[i,j,current_choices[1]], Q_u=Q_tba[i,j,current_choices[2]], kappa=params["kappa"], cost=params["cost"])
-        }
+        
+        # #decide which option to choose
+        # if (task_environment$sticky_softmax) {
+        #   #rather than refactor the approach of current_choices[1] being chosen and [2] being unchosen, I just keep the 'swap' idea with sticky softmax
+        #   #NB. We order the Q vector for this trial (i) and timestep (j) in the order of current_actions. So if action 2 is active, we place its
+        #   # Q value first in the vector. This allows a hard-coding of cur_action=1 (first element of c_ij is always active action) and then
+        #   # c_ij[2] is always unchosen.
+        #   browser()
+        #   c_ij <- p_sticky_softmax(Q_tba[i,j,][current_choices], cur_action=1, kappa=params["kappa"], omega=params["omega"])
+        #   c_ij <- c_ij[2] #just keep probability of selecting unchosen action, consistent with logic below
+        #             
+        # } else {
+        #   c_ij <- p_switch(Q_c=Q_tba[i,j,current_choices[1]], Q_u=Q_tba[i,j,current_choices[2]], kappa=params["kappa"], omega=params["omega"])
+        # }
        
-        if (c_ij > outcomes[i,j,2]) {
-          #switch actions
-          #active_choice <- all_choices[all_choices != active_choice]
-          #inactive_choice <- all_choices[all_choices != active_choice]
-          current_choices <- rev(current_choices) #for binary choice, just swap vector (first position is active choice, second is inactive)
+        # if (c_ij > outcomes[i,j,2]) {
+        #   #switch actions
+        #   #active_choice <- all_choices[all_choices != active_choice]
+        #   #inactive_choice <- all_choices[all_choices != active_choice]
+        #   current_choices <- rev(current_choices) #for binary choice, just swap vector (first position is active choice, second is inactive)
+        # }
+        
+        if (c_ij != active_action) {
+          # new action chosen
+          active_action <- c_ij
         }
         
-        choices[i,j] <- current_choices[1] #choose the current action 
+        choices[i,j] <- active_action #choose the current action 
         
       }
       
       #harvest outcome if response is emitted
       if (choices[i,j] != 0) {
-        rewards[i,j] <- as.numeric(outcomes[i,j,3] < prew[i,current_choices[1]]) #harvest reward on action
+        rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
         rt_last <- time_vec[j] #update the last response time
       }
       
@@ -142,7 +175,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE) {
   
 }
 
-#gaussian random walk with reflecting boundaries
+# gaussian random walk with reflecting boundaries -- useful for simulations
 grwalk <- function(len, start=0.5, step_sd=0.025, max_p=0.8, min_p=0.2)  {
   stopifnot(start > min_p && start < max_p) #not sure what we'd do otherwise...
   probs <- rep(NA, len)
@@ -162,13 +195,13 @@ grwalk <- function(len, start=0.5, step_sd=0.025, max_p=0.8, min_p=0.2)  {
   return(probs)
 }
 
-
+# simple rolling average
 myrollfunc <- function(vec, win=20) {
   require(zoo)
   rollmean(vec, win, align="right", fill=NA)
 }
 
-##return key summary statistics from run
+# return key summary statistics from run
 get_sim_stats <- function(ins_results, task_environment) {
   #accepts the output of ins_wins as the ins_results input
   
@@ -239,6 +272,7 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   for (i in 1:n) {
     #regenerate outcomes matrix and GRWs
     if (is.null(task_environment$prew)) {
+      message("Using default GRW task environment with initial p_rew = .5 and SD = .08")
       task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
     }
     
@@ -259,110 +293,16 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   return(list(all_df=all_df, sum_df=sum_df))
 }
 
-sim_spott_free_operant_group <- function(nsubjects=50, 
-                                         parameters=list(),
-                                         task_environment,
-                                quiet=FALSE, seed=1050, ...) {
-  
-  require(truncnorm)
-  
-  # parameters = list(
-  #   alpha=list(min=0.01, max=0.99, mean=0.2, sd=0.2),
-  #   gamma=list(shape=3, rate=1),
-  #   #nu=list(mean=-0.5, sd=1),
-  #   nu=list(mean=0, sd=0),
-  #   beta=list(shape=4, rate=1/100),
-  #   cost=list(shape1=.2, shape2=6.5),
-  #   kappa=list(shape=3, rate=1)
-  # ),
-  
-  param_defaults <- list(
-    alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
-    gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
-    nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
-    # beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
-    beta=expression(rgamma(nsubjects, shape=50, rate=1)), #motor recovery
-    cost=expression(rnorm(nsubjects, mean=1, sd=2)), #switch cost/stickiness
-    kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
-  )
-  
-  #fill in defaults for any parameters not passed in
-  for (pname in names(param_defaults)) {
-    if (is.null(parameters[[pname]])) {
-      parameters[[pname]] <- param_defaults[[pname]]
-    }
-  }
-  
-  set.seed(seed) #keep sims consistent
-  
-  #simulate subject parameters
-  #alpha (learning rate) from truncated normal
-  # alpha_subj <- rtruncnorm(nsubjects, a=parameters$alpha$min, b=parameters$alpha$max, 
-  #                          mean = parameters$alpha$mean, sd = parameters$alpha$sd)
 
-  alpha_subj <- eval(parameters$alpha)
-    
-  #gamma (vigor sensitivity -- logistic slope) from gamma (haha) 3,1 distribution 
-  #gamma_subj <- rgamma(nsubjects, shape=parameters$gamma$shape, rate=parameters$gamma$rate)
-  
-  gamma_subj <- eval(parameters$gamma)
-  
-  #nu is basal vigor (difficulty in IRT terms), which scales the level of value in the environment needed to promote a response. sample from normal
-  #nu_subj <- rnorm(nsubjects, mean=parameters$nu$mean, sd=parameters$nu$sd)
-  nu_subj <- eval(parameters$nu)
-  
-  #beta (motor speed) from a gamma (4, .01) distribution
-  #beta_subj <- rgamma(nsubjects, shape=parameters$beta$shape, rate=parameters$beta$rate)
-  beta_subj <- eval(parameters$beta)
-  
-  # if (task_environment$sticky_softmax) {
-  #   if (!is.null(parameters$cost$shape1)) {
-  #     message("Switching over to Normal(1,2) prior on cost")
-  #     parameters$cost <- list(mean=1, sd=2)
-  #   }
-  #   
-  #   #cost parameter is in softmax temperature units -- sample from Gaussian centered on zero
-  #   cost_subj <- rnorm(nsubjects, mean=parameters$cost$mean, sd=parameters$cost$sd)
-  # } else {
-  #   #cost parameter is in probability units -- sample from beta (.2, 6.5) distribution (mean = .03)
-  #   cost_subj <- rbeta(nsubjects, shape1=parameters$cost$shape1, shape2=parameters$cost$shape2)
-  # }
-  # 
-  # cost_subj <- rep(0, nsubjects)
-  
-  cost_subj <- eval(parameters$cost)
-  
-  #kappa (softmax temperature in p_switch). Sample from gamma (3,1) distribution, as with gamma parameter
-  #kappa_subj <- rgamma(nsubjects, shape=parameters$kappa$shape, rate=parameters$kappa$rate)
-  
-  kappa_subj <- eval(parameters$kappa)
-  
-  parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, cost=cost_subj, kappa=kappa_subj)
-
-  dlist <- list()
-  
-  for (i in 1:nrow(parmat)) {
-    subj_data <- sim_data_for_stan(parmat[i,], task_environment, n=1)
-    subj_data$id <- i
-    subj_data <- cbind(subj_data, as.list(parmat[i,]))
-    dlist[[i]] <- subj_data
-  }
-  
-  dlist <- dplyr::bind_rows(dlist)
-
-  return(dlist)    
-}
-
-
-##function to convert simulated data to format the matches Stan model
-#wrapper around repeat_forward simulation that converts to same format as empirical data
+# function to convert simulated data to format the matches Stan model
+# wrapper around repeat_forward simulation that converts to same format as empirical data
 sim_data_for_stan <- function(pars, task_environment, n=100) {
   results <- repeat_forward_simulation(pars, task_environment, n)
   subj_data <- results$all_df
-  bin_boundaries <- seq(0, task_environment$trial_length, by=task_environment$bin_size)
+  bin_boundaries <- seq(0, task_environment$trial_ms, by=task_environment$bin_ms)
   timestep_vector <- sort(unique(subj_data$timestep))
-  time_vec <- seq(0, task_environment$trial_length, by=task_environment$bin_size)
-  bin_centers <- time_vec[-1] - task_environment$bin_size/2
+  time_vec <- seq(0, task_environment$trial_ms, by=task_environment$bin_ms)
+  bin_centers <- time_vec[-1] - task_environment$bin_ms/2
   time_levels <- Hmisc::cut2(bin_centers, time_vec)
   
   subj_data <- subj_data %>% 
@@ -408,3 +348,65 @@ sim_data_for_stan <- function(pars, task_environment, n=100) {
   
   return(subj_data)
 }
+
+# function to simulate free operant behavior in SPOTT for multiple subjects, allowing for
+# between-subject variation in the sample parameter distribution
+sim_spott_free_operant_group <- function(
+  nsubjects=50, parameters=list(), task_environment,
+  quiet=FALSE, seed=1050, ...) {
+  
+  pacman::p_load(truncnorm)
+  
+  # parameters = list(
+  #   alpha=list(min=0.01, max=0.99, mean=0.2, sd=0.2),
+  #   gamma=list(shape=3, rate=1),
+  #   #nu=list(mean=-0.5, sd=1),
+  #   nu=list(mean=0, sd=0),
+  #   beta=list(shape=4, rate=1/100),
+  #   omega=list(shape1=.2, shape2=6.5),
+  #   kappa=list(shape=3, rate=1)
+  # ),
+  
+  param_defaults <- list(
+    alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
+    gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
+    nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
+    # beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
+    beta=expression(rgamma(nsubjects, shape=50, rate=1)), #motor recovery
+    omega=expression(rnorm(nsubjects, mean=1, sd=2)), #switch omega/stickiness
+    kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
+  )
+  
+  #fill in defaults for any parameters not passed in
+  for (pname in names(param_defaults)) {
+    if (is.null(parameters[[pname]])) {
+      parameters[[pname]] <- param_defaults[[pname]]
+    }
+  }
+  
+  set.seed(seed) #keep sims consistent
+  
+  #simulate subject parameters
+  alpha_subj <- eval(parameters$alpha)
+  gamma_subj <- eval(parameters$gamma)
+  nu_subj <- eval(parameters$nu)
+  beta_subj <- eval(parameters$beta)
+  omega_subj <- eval(parameters$omega)
+  kappa_subj <- eval(parameters$kappa)
+  
+  parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, omega=omega_subj, kappa=kappa_subj)
+
+  dlist <- list()
+  
+  for (i in 1:nrow(parmat)) {
+    subj_data <- sim_data_for_stan(parmat[i,], task_environment, n=1)
+    subj_data$id <- i
+    subj_data <- cbind(subj_data, as.list(parmat[i,]))
+    dlist[[i]] <- subj_data
+  }
+  
+  dlist <- dplyr::bind_rows(dlist)
+
+  return(dlist)    
+}
+
