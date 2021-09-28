@@ -1,7 +1,40 @@
 #functions to estimate ins model performance given a task environment and set of parameters
 
-#cost function is total points earned given the contingency
-#this function finds optimal parameters for the model given the current environment
+# helper function to setup a task environment consisting of actions, reward probabilities,
+# trials, time duration of trials, and time bins
+setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200, trial_ms=6000, bin_ms=50) {
+  
+  prew <- lapply(prew, eval.parent, n=1) # evaluate all prew expressions
+  lens <- sapply(prew, length)
+  stopifnot(length(unique(lens)) == 1L)
+  prew <- do.call(cbind, prew) #make into a matrix
+  
+  task_environment <- list(
+    prew=prew, # evaluate all prew expressions
+    n_actions = length(prew),
+    n_trials = n_trials,
+    trial_ms = trial_ms, #6 seconds
+    bin_ms = bin_ms, # ms
+    n_timesteps = trial_ms/bin_ms,
+    model=NULL
+  )
+  
+  # These random numbers need to be constant in optimization so that the cost function is on the same scale across iterations
+  # random numbers on choices for trials and timesteps. Last dim is p_response, p_switch, outcome (three points at which outputs are probabilistic)
+  
+  # Need a unique RNG seed for each trial x timestep to make sure that sample() call in sticky softmax is
+  # reproducible across iteration in optimization.
+  task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  return(task_environment)
+  
+}
+
+
+# Cost function is total points earned given the contingency
+# This function finds optimal parameters for the model given the current environment
+# In computational RL terms, this should find maximum likelihood parameters for one subject
 simulate_ins_performance <- function(initial_params, fixed=NULL, task_environment, optimizer="nlminb", profile=FALSE) {
   #track optimization
   if (profile) { 
@@ -54,9 +87,12 @@ split_free_fixed <- function(params, fixed=NULL) {
 #if optimize=TRUE, only the (negative) earnings are returned as the objective function
 #if optimize=FALSE, the model outputs at the current parameters are provided in a list
 ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, prior_Q=0) {
-  params <- c(params, fixed) #add any fixed parameters to named vector
   
+  params <- c(params, fixed) #add any fixed parameters to named vector
+
   model <- task_environment$model
+  checkmate::assert_string(model, null.ok = FALSE)
+  
   prew <- task_environment$prew
   n_trials <- task_environment$n_trials
   trial_ms <- task_environment$trial_ms
@@ -70,6 +106,14 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
   time_vec <- seq(0, trial_ms, by=bin_ms)
   
+  if (model == "nonu" && params["nu"] != 0) {
+    warning("nonu model has non-zero nu")
+    params["nu"] <- 0
+  } else if (model == "nobeta" && params["beta"] != 1.0) {
+    warning("nobeta model has beta != 1.0")
+    params["beta"] <- 1
+  }
+  
   #allow for trial-varying prew: trials x choices
   if (is.vector(prew)) {
     all_choices <- 1:length(prew)
@@ -79,13 +123,13 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
     all_choices <- 1:ncol(prew) #assume we have an ntrials x nchoices reward matrix
   } #handle within trial variation?
   
-  active_action <- sample(all_choices, 2) #first element is chosen, second is unchosen. there has to be an initial chosen action (even if not emitted)
+  active_action <- sample(all_choices, 1) #first element is chosen, second is unchosen. there has to be an initial chosen action (even if not emitted)
   #inactive_choice <- all_choices[all_choices != active_choice]
   Q_tba = array(NA_real_, dim=c(n_trials, n_timesteps, length(all_choices))) #zero priors on first trial + timestep
   Q_tba[1,,] <- prior_Q
   
   # setup local function for p_response based on model
-  if (model %in% c("main", "nobeta", "nonu")) {
+  if (model %in% c("main", "value2pl", "nobeta", "nonu")) {
     loc_presp <- function(Q, tau, rt_last) {
       p_response(Q, tau = tau, rt_last = rt_last,
                  gamma=params["gamma"], nu=params["nu"], beta=params["beta"])  
@@ -103,7 +147,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
         gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=TRUE)
     }
   } else if (model == "notime") {
-    stop("Not implement")
+    stop("Not implemented")
   }
   
   #loop over trials and timesteps
@@ -111,42 +155,19 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
     rt_last <- 0 #reset trial start
     for (j in 1:n_timesteps) {
       emit_response <- loc_presp(Q_tba[i,j,], tau = time_vec[j], rt_last = rt_last)
-
+      
       #decide whether to emit a response
       if (emit_response > rand_p_respond[i,j]) {
         p_ij <- p_sticky_softmax(Q_tba[i,j,], cur_action=active_action, kappa=params["kappa"], omega=params["omega"])
         set.seed(rand_p_which[i,j])
         c_ij <- sample(all_choices, size=1, prob=p_ij)
         
-        
-        # #decide which option to choose
-        # if (task_environment$sticky_softmax) {
-        #   #rather than refactor the approach of current_choices[1] being chosen and [2] being unchosen, I just keep the 'swap' idea with sticky softmax
-        #   #NB. We order the Q vector for this trial (i) and timestep (j) in the order of current_actions. So if action 2 is active, we place its
-        #   # Q value first in the vector. This allows a hard-coding of cur_action=1 (first element of c_ij is always active action) and then
-        #   # c_ij[2] is always unchosen.
-        #   browser()
-        #   c_ij <- p_sticky_softmax(Q_tba[i,j,][current_choices], cur_action=1, kappa=params["kappa"], omega=params["omega"])
-        #   c_ij <- c_ij[2] #just keep probability of selecting unchosen action, consistent with logic below
-        #             
-        # } else {
-        #   c_ij <- p_switch(Q_c=Q_tba[i,j,current_choices[1]], Q_u=Q_tba[i,j,current_choices[2]], kappa=params["kappa"], omega=params["omega"])
-        # }
-       
-        # if (c_ij > outcomes[i,j,2]) {
-        #   #switch actions
-        #   #active_choice <- all_choices[all_choices != active_choice]
-        #   #inactive_choice <- all_choices[all_choices != active_choice]
-        #   current_choices <- rev(current_choices) #for binary choice, just swap vector (first position is active choice, second is inactive)
-        # }
-        
         if (c_ij != active_action) {
           # new action chosen
           active_action <- c_ij
         }
         
-        choices[i,j] <- active_action #choose the current action 
-        
+        choices[i,j] <- active_action #choose the current action
       }
       
       #harvest outcome if response is emitted
@@ -163,7 +184,6 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
         #carry learning to first timestep of next trial (assumption)
         Q_tba[i+1,1,] <- Q_next(Q_tba[i,j,], action=choices[i,j], outcome=rewards[i,j], alpha=params["alpha"])
       }
-      
     }
   }
   
@@ -203,21 +223,26 @@ myrollfunc <- function(vec, win=20) {
 
 # return key summary statistics from run
 get_sim_stats <- function(ins_results, task_environment) {
+  require(dplyr)
+  require(ggplot2)
+  require(tidyr)
   #accepts the output of ins_wins as the ins_results input
   
-  Q_df <- reshape2::melt(ins_results$Q_tba, varnames=c("trial", "timestep", "action")) %>% 
-    mutate(action=factor(action, levels=c(1,2), labels=c("Q_1", "Q_2")))
+  n_actions <- dim(ins_results$Q_tba)[3]
+  Q_df <- reshape2::melt(ins_results$Q_tba, varnames=c("trial", "timestep", "action")) %>%
+    dplyr::mutate(action=factor(action, levels=1:n_actions, labels=paste0("Q_", 1:n_actions)))
   
   choices_df <- reshape2::melt(ins_results$choices, varnames=c("trial", "timestep"), value.name="choice")
   rewards_df <- reshape2::melt(ins_results$rewards, varnames=c("trial", "timestep"), value.name="outcome")
   
-  trial_plot <- ggplot(Q_df %>% filter(trial < 6), aes(x=timestep, y=value, color=action)) + geom_line() + facet_wrap(~trial, ncol=1)
+  trial_plot <- ggplot(Q_df %>% filter(trial < 8), aes(x=timestep, y=value, color=action)) + geom_line() + facet_wrap(~trial, ncol=1)
   
   #Q_tba is Q values trials x timesteps x actions
   #choices_df: action 0 means no action, whereas 1 or 2 denote their respective actions
   
   #this has columnns for Q_1 and Q_2
   
+  #N.B. These mutate calls are only written for the 2-choice case (not yet generalized)
   #don't compute Q ratio if either is 0
   all_df <- Q_df %>% spread(action, value) %>% full_join(choices_df, by=c("trial", "timestep")) %>% full_join(rewards_df, by=c("trial", "timestep")) %>% 
     arrange(trial, timestep) %>% 
@@ -240,6 +265,7 @@ get_sim_stats <- function(ins_results, task_environment) {
   #Q_ratio_roll, 
   #response_rate, reward_rate
   
+  #N.B. These summaries are only written for the 2-choice case.
   sum_df <- all_df %>% group_by(trial) %>% 
     summarize(nresp=sum(choice > 0), avg_value=sum(Q_1, Q_2),
               n_1=sum(choice==1), n_2=sum(choice==2),
@@ -251,18 +277,19 @@ get_sim_stats <- function(ins_results, task_environment) {
   
   #allow for trial-varying prew: trials x choices
   if (is.vector(task_environment$prew)) {
-    task_environment$prew <- pracma::repmat(task_environment$prew, task_environment$n_trials, 1) #if we get a vector, replicate onto rows (trials)
+    #if we get a vector, replicate onto rows (trials)
+    task_environment$prew <- pracma::repmat(task_environment$prew, task_environment$n_trials, 1)
   } else {
     stopifnot(nrow(task_environment$prew) == task_environment$n_trials)
   }
   
-  prew_df <- data.frame(task_environment$prew) %>% setNames(c("p_1", "p_2")) %>% mutate(trial=1:n()) %>%
+  prew_df <- data.frame(task_environment$prew) %>% setNames(paste0("p_", 1:n_actions)) %>% mutate(trial=1:n()) %>%
     mutate(p1_p2=p_1/p_2)
   
   sum_df <- sum_df %>% left_join(prew_df, by="trial") %>%
     mutate(log_n1_n2 = log(n1_n2), log_p1_p2=log(p1_p2))
   
-  return(list(all_df=all_df, sum_df=sum_df))
+  return(list(all_df=all_df, sum_df=sum_df, trial_plot=trial_plot))
 }
 
 repeat_forward_simulation <- function(params, task_environment, n=100) {
@@ -276,7 +303,10 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
       task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
     }
     
-    task_environment$outcomes <- with(task_environment, array(runif(n_timesteps*n_trials*3), dim=c(n_trials, n_timesteps, 3)))  
+    # get new random numbers for each replication dataset so that outcomes vary from one to the next
+    task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
     
     results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
     summaries <- get_sim_stats(results, task_environment)
@@ -294,10 +324,10 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
 }
 
 
-# function to convert simulated data to format the matches Stan model
+# function to convert simulated data to a format that matches Stan or VBA model
 # wrapper around repeat_forward simulation that converts to same format as empirical data
-sim_data_for_stan <- function(pars, task_environment, n=100) {
-  results <- repeat_forward_simulation(pars, task_environment, n)
+sim_data_for_stan <- function(params, task_environment, n=100) {
+  results <- repeat_forward_simulation(params, task_environment, n)
   subj_data <- results$all_df
   bin_boundaries <- seq(0, task_environment$trial_ms, by=task_environment$bin_ms)
   timestep_vector <- sort(unique(subj_data$timestep))
@@ -357,17 +387,8 @@ sim_spott_free_operant_group <- function(
   
   pacman::p_load(truncnorm)
   
-  # parameters = list(
-  #   alpha=list(min=0.01, max=0.99, mean=0.2, sd=0.2),
-  #   gamma=list(shape=3, rate=1),
-  #   #nu=list(mean=-0.5, sd=1),
-  #   nu=list(mean=0, sd=0),
-  #   beta=list(shape=4, rate=1/100),
-  #   omega=list(shape1=.2, shape2=6.5),
-  #   kappa=list(shape=3, rate=1)
-  # ),
-  
   param_defaults <- list(
+    model="value2pl",
     alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
     gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
     nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
@@ -395,7 +416,7 @@ sim_spott_free_operant_group <- function(
   kappa_subj <- eval(parameters$kappa)
   
   parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, omega=omega_subj, kappa=kappa_subj)
-
+  
   dlist <- list()
   
   for (i in 1:nrow(parmat)) {
@@ -406,7 +427,7 @@ sim_spott_free_operant_group <- function(
   }
   
   dlist <- dplyr::bind_rows(dlist)
-
+  
   return(dlist)    
 }
 
