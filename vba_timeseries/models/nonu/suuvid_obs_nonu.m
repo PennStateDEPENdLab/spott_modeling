@@ -13,8 +13,8 @@ gamma = phi(2); %slope on vigor logistic (sensitivity)
 kappa = phi(3); %softmax temperature
 omega = phi(4); %stickiness
 
-tdiff = u(3); %cross-check position in u
-active_action = u(4); %cross-check position in u
+tdiff = u(4); %cross-check position in u
+active_action = u(5); %cross-check position in u
 
 n_actions = inG.hidden_states;
 phi_tb = 1 - exp(-tdiff/beta);
