@@ -10,9 +10,8 @@ function  [ gx ] = suuvid_obs_nonu(Xt, phi, u, inG)
 phi = transform_phi(phi, inG);
 beta = phi(1); %motor speed recovery rate
 gamma = phi(2); %slope on vigor logistic (sensitivity)
-nu = phi(3); %basal vigor
-kappa = phi(4); %softmax temperature
-omega = phi(5); %stickiness
+kappa = phi(3); %softmax temperature
+omega = phi(4); %stickiness
 
 tdiff = u(4); %cross-check position in u
 active_action = u(5); %cross-check position in u
@@ -24,7 +23,7 @@ Qcur = Xt(1:n_actions);
 Qtot = sum(Qcur); %total value
 
 %probability of responding at all
-p_respond = phi_tb/(1 + exp(-gamma * (Qtot - nu)));
+p_respond = phi_tb/(1 + exp(-gamma * (Qtot)));
 
 %which action to choose
 
