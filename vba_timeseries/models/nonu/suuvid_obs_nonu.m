@@ -10,7 +10,6 @@ function  [ gx ] = suuvid_obs_nonu(Xt, phi, u, inG)
 phi = transform_phi(phi, inG);
 beta = phi(1); %motor speed recovery rate
 gamma = phi(2); %slope on vigor logistic (sensitivity)
-nu = phi(3); %basal vigor
 kappa = phi(4); %softmax temperature
 omega = phi(5); %stickiness
 
