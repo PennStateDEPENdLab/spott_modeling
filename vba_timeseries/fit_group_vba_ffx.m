@@ -12,7 +12,7 @@ clear;
 %as environment variables so that this script can be scaled easily for batch processing
 
 %% set environment and define file locations
-project_repo = '~/Data_Analysis/spott_modeling';
+project_repo = '/Users/ruofanma/Documents/GitHub/spott_modeling';
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source=[project_repo, '/data/vba_input_Updated'];
@@ -44,7 +44,8 @@ inputfiles = arrayfun(@(x) fullfile(x.folder, x.name), inputfiles, 'UniformOutpu
 
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
 %models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
-models = {'time2pl', 'notime', 'zetaexponent'};
+%models = {'time2pl', 'notime', 'zetaexponent'};
+models = {'value2pl'};
 
 %inputfiles = inputfiles(23:26);
 
