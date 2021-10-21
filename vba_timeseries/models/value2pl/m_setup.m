@@ -9,7 +9,7 @@ if nargin < 1, vo = struct(); end
 vo.evo_fname = @m_suuvid_evo_base; %shared function in root of models
 
 % observation function
-vo.obs_fname = @suuvid_obs_nonu;
+vo.obs_fname = @suuvid_obs_value2pl;
 
 % number of hidden states
 vo.hidden_states = 2; %two-action approach for now
