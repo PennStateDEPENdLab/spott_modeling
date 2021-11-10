@@ -24,7 +24,7 @@ Qcur = Xt(1:n_actions);
 Qtot = sum(Qcur); %total value
 
 %probability of responding at all
-p_respond = phi_tb/(1 + exp(-gamma * (Qtot - nu)));
+p_respond = phi_tb/(1 + exp(-gamma * (Qtot + nu)));
 
 %which action to choose
 
