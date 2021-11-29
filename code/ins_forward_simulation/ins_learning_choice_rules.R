@@ -52,7 +52,7 @@ p_response_tdiff <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1, beta=1e-1
   
   tdiff = (tau - rt_last)/1000 # rescale parameters in seconds (avoid crazy values)
   
-  p_respond_tb <- phi / (1 + exp(-gamma*Qstar*(tdiff-nu))) #probability of making a response in this bin
+  p_respond_tb <- phi / (1 + exp(-gamma*Qstar*(tdiff+nu))) #probability of making a response in this bin
   return(p_respond_tb)
 }
 

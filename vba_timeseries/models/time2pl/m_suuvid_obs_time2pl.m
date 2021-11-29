@@ -28,7 +28,7 @@ Qtot = sum(Qcur); %total value
 %        tdiffR = 1;
 %end
 %p_respond = 1/(1 + exp(-gamma * Qtot * (tdiffR - nu)));
-p_respond = 1/(1 + exp(-gamma * Qtot * (tdiff/1000 - nu)));
+p_respond = 1/(1 + exp(-gamma * Qtot * (tdiff/1000 + nu)));
 %which action to choose
 
 cc = zeros(n_actions,1); %row vector, as with Q
