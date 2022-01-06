@@ -22,7 +22,7 @@ future::plan(
   future.batchtools::batchtools_slurm,
   template = "slurm-simple",
   resources = list(
-    walltime = 40*60*chunk_size, # 40 minutes (specified in seconds), 10 chunks
+    walltime = 5*chunk_size, # 40 minutes (specified in seconds), 10 chunks
     memory = 8000, # 8 GB
     ncpus = 4,
     chunks.as.arrayjobs = FALSE
