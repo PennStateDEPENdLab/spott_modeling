@@ -22,23 +22,28 @@ future::plan(
   future.batchtools::batchtools_slurm,
   template = "slurm-simple",
   resources = list(
-    walltime = 5*chunk_size, # 40 minutes (specified in seconds), 10 chunks
-    memory = 8000, # 8 GB
-    ncpus = 4,
-    chunks.as.arrayjobs = FALSE
+    walltime = 60 * 60,
+    memory = 1000, # 1 GB
+    ncpus = 1,
+    chunks.as.arrayjobs = TRUE
   )
 )
+future.debug = TRUE
+
+future.apply::future_apply(sim_grid, c(1), future.chunk.size=chunk_size,  function(value){
+  print(value)
+})
 
 # loop set up to iterate over the dataframe in parallel
 # each interation handles "chunk.size" number of elements
 # %dorng% sets the loop to run in parallel
-res <- foreach(
-  df = iter(sim_grid), .packages=c("brms", "tidybayes", "emmeans", "glue", "dplyr", "ggdist", "data.table"),
-  .options.future = list(chunk.size = chunk_size)) %dorng% {
+# res <- foreach(
+#   df = iter(sim_grid), .packages=c("brms", "tidybayes", "emmeans", "glue", "dplyr", "ggdist", "data.table"),
+#   .options.future = list(chunk.size = chunk_size)) %dorng% {
     
-    print(head(df))
+#     print(head(df))
     
-    }
+#     }
 
 
 
