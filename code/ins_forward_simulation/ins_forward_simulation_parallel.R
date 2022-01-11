@@ -12,6 +12,8 @@ sim_grid <- expand.grid(alpha=seq(0.001, 0.9, by=0.1), # increment 0.1 <- 0.01
                         omega=seq(-5, 5, by=1), # increment 1 <- 0.1
                         kappa=seq(0.001, 10, by=1)) #increment 1 <- 0.1
 
+row_ind <- 1:nrow(sim_grid)
+
 #split_df_rs <- ??
 
 chunk_size <- 10000 #set how many items from the dataframe are sent to each parallel execution of the loop
@@ -30,9 +32,10 @@ future::plan(
 )
 future.debug = TRUE
 
-future.apply::future_apply(sim_grid, c(1), future.chunk.size=chunk_size,  function(value){
-  print(value)
+future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  function(row_index){
+  print(sim_grid[row_index,])
 })
+
 
 # loop set up to iterate over the dataframe in parallel
 # each interation handles "chunk.size" number of elements
