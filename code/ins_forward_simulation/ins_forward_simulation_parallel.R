@@ -12,7 +12,7 @@ sim_grid <- expand.grid(alpha=seq(0.001, 0.9, by=0.1), # increment 0.1 <- 0.01
                         omega=seq(-5, 5, by=1), # increment 1 <- 0.1
                         kappa=seq(0.001, 10, by=1)) #increment 1 <- 0.1
 
-row_ind <- 1:nrow(sim_grid)
+row_ind <- matrix(1:nrow(sim_grid))
 
 #split_df_rs <- ??
 
@@ -34,6 +34,8 @@ future.debug = TRUE
 
 future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  function(row_index){
   print(sim_grid[row_index,])
+
+
 })
 
 
@@ -74,6 +76,7 @@ future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  functio
 #   parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, omega, kappa), mean)
 #   
 #   #name the path for simulation outputs
+#   out_dir <- "/proj/mnhallqlab/users/ruofan/ins_forward_simulation"
 #   out_dir <- file.path(repo_dir, "data", paste0("vba_input_simX", as.character(i))) # Now how do I name the new document?
 #   if (!dir.exists(out_dir)) { dir.create(out_dir) }
 #   dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -omega, -kappa)
@@ -86,5 +89,5 @@ future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  functio
 #   }
 #   
 #   #this writes the combined data for all subjects for multi-subject/hierarchical fitting
-#   write.csv(parmat, file=file.path(out_dir, "stan_population_demo_parameters.csv"), row.names=F)
+#   write.csv(parmat, file=file.path(out_dir, paste0("stan_population_demo_parameters_")), row.names=F)
 # }
