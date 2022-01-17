@@ -5,6 +5,9 @@ library(future.batchtools)
 library(iterators)
 registerDoFuture()
 
+library(tidyverse)
+library(truncnorm)
+
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
 
