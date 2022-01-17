@@ -6,7 +6,7 @@ library(iterators)
 registerDoFuture()
 
 library(tidyverse)
-library(truncnorm)
+# library(truncnorm)
 
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
@@ -42,7 +42,7 @@ future.debug = TRUE
 
 future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  function(row_index){
   these_params <- list(
-    alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid$alpha[row_index], sd=0.2)),
+    alpha=expression(rnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid$alpha[row_index], sd=0.2)), #rtruncnorm --> rnorm
     gamma=expression(rgamma(nsubjects, shape=sim_grid$gamma[row_index], rate=1)),
     nu=expression(rnorm(nsubjects, mean=sim_grid$nu[row_index], sd=0)), #deprecated parameter
     omega=expression(rnorm(nsubjects, mean=sim_grid$omega[row_index], sd=2)), #switch omega/stickiness
