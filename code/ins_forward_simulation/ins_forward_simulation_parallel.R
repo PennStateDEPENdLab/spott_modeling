@@ -5,6 +5,9 @@ library(future.batchtools)
 library(iterators)
 registerDoFuture()
 
+source("ins_forward_simulation/ins_simulation_functions.R")
+source("ins_forward_simulation/ins_learning_choice_rules.R")
+
 sim_grid <- expand.grid(alpha=seq(0.001, 0.9, by=0.1), # increment 0.1 <- 0.01
                         gamma=seq(0.1, 100, by = 3),  # increment 1 <- 0.1
                         nu=seq(-5, 5, by=1),
