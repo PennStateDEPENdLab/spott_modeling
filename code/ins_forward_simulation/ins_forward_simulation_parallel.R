@@ -7,8 +7,8 @@ registerDoFuture()
 
 library(tidyverse)
 
-install.packages("truncnorm")
-library(truncnorm)
+# install.packages("truncnorm")
+# library(truncnorm)
 
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
