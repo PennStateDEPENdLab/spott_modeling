@@ -24,7 +24,7 @@ sim_grid_tr <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
 
 # Creating row_ind (row index) to help naming output files in future_apply
 # row_ind <- matrix(1:nrow(sim_grid))
-row_ind <- matrix(as.numeric(rownames(sim_grid_tr)))
+# row_ind <- matrix(as.numeric(rownames(sim_grid_tr)))
 
 chunk_size <- 5 #set how many items from the dataframe are sent to each parallel execution of the loop
 
@@ -44,7 +44,7 @@ future.debug = TRUE
 
 future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
   these_params <- list(
-    alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
+    # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
     #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)), 
     gamma=expression(rgamma(nsubjects, shape=sim_grid_row$gamma, rate=1)),
     nu=expression(rnorm(nsubjects, mean=sim_grid_row$nu, sd=0)), #deprecated parameter
