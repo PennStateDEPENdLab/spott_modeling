@@ -6,7 +6,9 @@ library(iterators)
 registerDoFuture()
 
 library(tidyverse)
-# library(truncnorm)
+
+install.packages("truncnorm")
+library(truncnorm)
 
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
@@ -40,14 +42,14 @@ future::plan(
 )
 future.debug = TRUE
 
-future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  function(row_index){
+future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
   these_params <- list(
-    alpha=expression(rnorm(nsubjects, mean=sim_grid$alpha[row_index], sd=0.2)), #rtruncnorm --> rnorm
-    #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid$alpha[row_index], sd=0.2)), 
-    gamma=expression(rgamma(nsubjects, shape=sim_grid$gamma[row_index], rate=1)),
-    nu=expression(rnorm(nsubjects, mean=sim_grid$nu[row_index], sd=0)), #deprecated parameter
-    omega=expression(rnorm(nsubjects, mean=sim_grid$omega[row_index], sd=2)), #switch omega/stickiness
-    kappa=expression(rgamma(nsubjects, shape=sim_grid$kappa[row_index], rate=1)) #(inverse) temperature on value-guided component of choice
+    alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
+    #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)), 
+    gamma=expression(rgamma(nsubjects, shape=sim_grid_row$gamma, rate=1)),
+    nu=expression(rnorm(nsubjects, mean=sim_grid_row$nu, sd=0)), #deprecated parameter
+    omega=expression(rnorm(nsubjects, mean=sim_grid_row$omega, sd=2)), #switch omega/stickiness
+    kappa=expression(rgamma(nsubjects, shape=sim_grid_row$kappa, rate=1)) #(inverse) temperature on value-guided component of choice
   )
   
   #simulate data using a population distribution on the parameters -- takes a few minutes
@@ -59,6 +61,7 @@ future.apply::future_apply(row_ind, c(1), future.chunk.size=chunk_size,  functio
   parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, omega, kappa), mean)
   
   out_dir <- "/proj/mnhallqlab/users/ruofan/ins_forward_simulation"
+  row_index <- rownames(sim_grid_row)
   
   #this writes the combined data for all subjects for multi-subject/hierarchical fitting
   write.csv(parmat, file=file.path(out_dir, paste0("stan_population_demo_parameters_", row_index)), row.names=F)
