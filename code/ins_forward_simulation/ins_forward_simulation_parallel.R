@@ -20,13 +20,13 @@ sim_grid <- expand.grid(alpha=seq(0.001, 0.9, by=0.1), # increment 0.1 <- 0.01
                         omega=seq(-5, 5, by=1), # increment 1 <- 0.1
                         kappa=seq(0.001, 10, by=1)) #increment 1 <- 0.1
 
-sim_grid_tr <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
+#sim_grid_tr <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
 
 # Creating row_ind (row index) to help naming output files in future_apply
 # row_ind <- matrix(1:nrow(sim_grid))
 # row_ind <- matrix(as.numeric(rownames(sim_grid_tr)))
 
-chunk_size <- 5 #set how many items from the dataframe are sent to each parallel execution of the loop
+chunk_size <- 1000 #5 #set how many items from the dataframe are sent to each parallel execution of the loop
 
 # future set up: for using slurm as the backend of future
 #https://tdhock.github.io/blog/2019/future-batchtools/
@@ -42,7 +42,7 @@ future::plan(
 )
 future.debug = TRUE
 
-future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
+future.apply::future_apply(sim_grid, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
   these_params <- list(
     # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
     #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)), 
