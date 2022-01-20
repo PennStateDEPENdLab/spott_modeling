@@ -47,6 +47,7 @@ future.debug = TRUE
 #   })
 
 future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  FUN = function(sim_grid_row){
+  sim_grid_row <- sim_grid_row
   these_params <- list(
     # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
     #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)),
