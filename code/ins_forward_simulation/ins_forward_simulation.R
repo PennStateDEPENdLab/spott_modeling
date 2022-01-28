@@ -30,13 +30,13 @@ value2pl_params <- list(
 )
 
 # general settings for time2pl model -- haven't spent time on this yet, but probably not grossly wrong (Sep2021)
+# time2pl does not have a beta parameter (1.0 in numerator)
 time2pl_params <- list(
-  value=c(     alpha=0.1,   gamma=2,   nu=-1,  beta=200, omega=0,   kappa=8), #make it more decisive/exploitative
-  lower=c(     alpha=0.001, gamma=0.1, nu=0,   beta=25,  omega=-10,  kappa=0.001),
-  upper=c(     alpha=0.99,  gamma=100, nu=5,   beta=500, omega=10,   kappa=10),
-  par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, beta=1e0, omega=1e-1, kappa=1e-1)
+  value=c(     alpha=0.1,   gamma=2,   nu=-1,  omega=0,   kappa=8), #make it more decisive/exploitative
+  lower=c(     alpha=0.001, gamma=0.1, nu=0,   omega=-10,  kappa=0.001),
+  upper=c(     alpha=0.99,  gamma=100, nu=5,   omega=10,   kappa=10),
+  par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, omega=1e-1, kappa=1e-1)
 )
-
 
 # prew is a list of expressions that are evaluated inside the function to generate reward probabilities
 # for each action. The length of prew determines the number of actions used in the simulations.
