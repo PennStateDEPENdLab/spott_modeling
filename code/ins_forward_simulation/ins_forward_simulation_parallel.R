@@ -93,7 +93,6 @@ res <- foreach(
   .export = c("rgamma_moments", "gamma_params_from_moments") # not picked up automatically by code analyzer inside expression
 ) %dorng% {
   these_params <- list(
-    # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
     model = "time2pl",
     alpha = expression(rtruncnorm(nsubjects, a=cond$alpha_min, b=cond$alpha_max, mean=cond$alpha_mean, sd=cond$alpha_sd)),
     gamma = expression(rgamma_moments(nsubjects, mean = cond$gamma_mean, sd = cond$gamma_sd)),
