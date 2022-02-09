@@ -50,7 +50,8 @@ sim_grid$kappa_sd <- sqrt(kvals) # make b/w variation proportionate to mean, don
 sim_grid$cond_id <- 1:nrow(sim_grid)
 
 # subset for testing
-sim_grid <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
+# sim_grid <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
+sim_grid <- sim_grid[c(16:20, 1016:1020, 10016:10020, 100016:100020),]
 
 # sets how many items from the dataframe are sent to each parallel execution of the loop
 # if you set it too low (e.g. 3), you'll get a *lot* of separate, brief jobs on the scheduler,
@@ -150,32 +151,32 @@ res <- foreach(
 #   })
 
 
-future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
-  print(sim_grid_row)
-  these_params <- list(
-    # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
-    #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)),
-    gamma=expression(rgamma(nsubjects, shape=sim_grid_row$gamma, rate=1)),
-    nu=expression(rnorm(nsubjects, mean=sim_grid_row$nu, sd=0)), #deprecated parameter
-    omega=expression(rnorm(nsubjects, mean=sim_grid_row$omega, sd=2)), #switch omega/stickiness
-    kappa=expression(rgamma(nsubjects, shape=sim_grid_row$kappa, rate=1)) #(inverse) temperature on value-guided component of choice
-  )
-
-  #simulate data using a population distribution on the parameters -- takes a few minutes
-  stan_population <- sim_spott_free_operant_group(
-    nsubjects=20, task_environment = task_environment,
-    these_params)
-
-  #distill subject parameters
-  parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, omega, kappa), mean)
-
-  out_dir <- "/proj/mnhallqlab/users/ruofan/ins_forward_simulation"
-  row_index <- rownames(sim_grid_row)
-
-  #this writes the combined data for all subjects for multi-subject/hierarchical fitting
-  write.csv(parmat, file=file.path(out_dir, paste0("stan_population_demo_parameters_", row_index)), row.names=F)
-
-})
+# future.apply::future_apply(sim_grid_tr, c(1), future.chunk.size=chunk_size,  function(sim_grid_row){
+#   print(sim_grid_row)
+#   these_params <- list(
+#     # alpha=expression(rnorm(nsubjects, mean=sim_grid_row$alpha, sd=0.2)), #rtruncnorm --> rnorm
+#     #alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid_row$alpha, sd=0.2)),
+#     gamma=expression(rgamma(nsubjects, shape=sim_grid_row$gamma, rate=1)),
+#     nu=expression(rnorm(nsubjects, mean=sim_grid_row$nu, sd=0)), #deprecated parameter
+#     omega=expression(rnorm(nsubjects, mean=sim_grid_row$omega, sd=2)), #switch omega/stickiness
+#     kappa=expression(rgamma(nsubjects, shape=sim_grid_row$kappa, rate=1)) #(inverse) temperature on value-guided component of choice
+#   )
+# 
+#   #simulate data using a population distribution on the parameters -- takes a few minutes
+#   stan_population <- sim_spott_free_operant_group(
+#     nsubjects=20, task_environment = task_environment,
+#     these_params)
+# 
+#   #distill subject parameters
+#   parmat <- stan_population %>% group_by(id) %>% summarize_at(vars(alpha, gamma, nu, omega, kappa), mean)
+# 
+#   out_dir <- "/proj/mnhallqlab/users/ruofan/ins_forward_simulation"
+#   row_index <- rownames(sim_grid_row)
+# 
+#   #this writes the combined data for all subjects for multi-subject/hierarchical fitting
+#   write.csv(parmat, file=file.path(out_dir, paste0("stan_population_demo_parameters_", row_index)), row.names=F)
+# 
+# })
 
 
 # loop set up to iterate over the dataframe in parallel
