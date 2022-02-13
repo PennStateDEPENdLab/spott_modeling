@@ -10,12 +10,12 @@
 
 [ -z "$subj" ] && echo "No subject ID variable passed in" && exit 1
 
-echo $subj
+$echo $subj
 
 #module use /proj/mnhallqlab/sw/modules
-#module load matlab/2021a
+module load matlab/2021a
 
-#matlab  -nodisplay -r "run matlabtest.m"
+matlab  -nodisplay -r matlabtest
 #/Applications/MATLAB_R2020b.app/bin/matlab -nodisplay -r fit_group_vba_ffx_RM
 
 #/Applications/MATLAB_R2020b.app/bin/matlab -nodisplay -r matlabtest
