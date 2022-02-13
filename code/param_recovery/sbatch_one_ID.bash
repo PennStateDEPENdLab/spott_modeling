@@ -8,6 +8,8 @@
 
 #export var=cond000011
 
+[ -z "$ID" ] && echo "No subject ID variable passed in" && exit 1
+
 echo $ID
 
 #module use /proj/mnhallqlab/sw/modules
