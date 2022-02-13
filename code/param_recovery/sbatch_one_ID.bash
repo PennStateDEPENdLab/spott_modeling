@@ -6,7 +6,6 @@
 #SBATCH -n 8
 #SBATCH -t 2:00:00
 
-#export var=cond000011
 
 [ -z "$subj" ] && echo "No subject ID variable passed in" && exit 1
 
