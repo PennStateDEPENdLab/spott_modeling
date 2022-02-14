@@ -29,16 +29,18 @@ addpath(genpath('/Users/ruofanma/Documents/GitHub/mh_vba')); % QUESTION 1: Do yo
 %% set environment and define file locations
 
 % local path
-% project_repo = '/Users/ruofanma/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling';
+%project_repo = '/Users/ruofanma/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling';
 % addpath(genpath('/Users/ruofanma/Documents/MATLAB/VBA-toolbox')); 
 
 % LL path
 project_repo = '/proj/mnhallqlab/projects/spott_modeling/par_sim';
-addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox')); 
+
 
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source = [project_repo, '/data/' subjID];  %CHECK
+
+% QUESTION 2: Do we need to re-load the VBA-toolbox from the cluster. If yes, where can I find it?
 
 %%
 %vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
@@ -130,7 +132,7 @@ for mnum = 1:length(models)
         end
     end
     
-    % QUESTION 2: Did we decide not to save the individual subject results
+    % QUESTION 3: Did we decide not to save the individual subject results
     % from VBA to save space? ids, L, vo, s_all?
     
     %save group outputs for now
