@@ -40,7 +40,7 @@ addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox'));
 
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
-data_source = [project_repo, subjID];  %CHECK
+data_source = [project_repo, '/', subjID];  %CHECK
 disp(data_source)
 %%
 %vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
