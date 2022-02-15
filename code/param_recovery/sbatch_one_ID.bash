@@ -11,7 +11,7 @@
 
 $echo $subj
 
-#module use /proj/mnhallqlab/sw/modules
+module use /proj/mnhallqlab/sw/modules
 module load matlab/2021a
 
 matlab  -nodisplay -r matlabtest
