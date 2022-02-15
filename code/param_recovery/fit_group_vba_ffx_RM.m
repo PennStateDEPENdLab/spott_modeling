@@ -14,17 +14,19 @@ clear;
 
 %% external settings
 
-subjID = getenv("subj");
+%subjID = getenv("subj");
+subjID = 'cond000011';
 
 %%
 
 % local path
 % addpath(genpath('/Users/ruofanma/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling'));
 % addpath(genpath('/Users/ruofanma/Documents/GitHub/spott_modeling'));
+% addpath(genpath('/Users/ruofanma/Documents/GitHub/mh_vba'));
 
 % LL path
 addpath(genpath('/nas/longleaf/home/maruofan/GitHub')); 
-addpath(genpath('/Users/ruofanma/Documents/GitHub/mh_vba')); % QUESTION 1: Do you have files in this mh_vba sitting on the cluster somewhere?
+addpath(genpath('/proj/mnhallqlab/lab_resources/mh_vba')); % QUESTION 1: Do you have files in this mh_vba sitting on the cluster somewhere?
 
 %% set environment and define file locations
 
@@ -38,7 +40,7 @@ addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox'));
 
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
-data_source = [project_repo, '/data/' subjID];  %CHECK
+data_source = [project_repo, '/data/', subjID];  %CHECK
 
 %%
 %vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
@@ -123,11 +125,11 @@ for mnum = 1:length(models)
         
         %write subject data to mat file only if just fitted, not loaded. This is necessary because the HDF5 format in
         %recent MATLAB .mat files will append to cell arrays implicitly, making the .mat files grow with every save
-        if fit_subj == 1
-            %parsave doesn't work in recent MATLAB versions.
-            m=matfile(o_file, 'writable',true);
-            m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
-        end
+%         if fit_subj == 1
+%             %parsave doesn't work in recent MATLAB versions.
+%             m=matfile(o_file, 'writable',true);
+%             m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
+%         end
     end
     
     % QUESTION 2: Did we decide not to save the individual subject results
