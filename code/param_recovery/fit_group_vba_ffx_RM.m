@@ -125,11 +125,11 @@ for mnum = 1:length(models)
         
         %write subject data to mat file only if just fitted, not loaded. This is necessary because the HDF5 format in
         %recent MATLAB .mat files will append to cell arrays implicitly, making the .mat files grow with every save
-%         if fit_subj == 1
-%             %parsave doesn't work in recent MATLAB versions.
-%             m=matfile(o_file, 'writable',true);
-%             m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
-%         end
+        if fit_subj == 1
+            %parsave doesn't work in recent MATLAB versions.
+            m=matfile(o_file, 'writable',true);
+            m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
+        end
     end
     
     % QUESTION 2: Did we decide not to save the individual subject results
