@@ -26,7 +26,7 @@ subjID = 'cond000011';
 
 % LL path
 addpath(genpath('/nas/longleaf/home/maruofan/GitHub')); 
-addpath(genpath('/proj/mnhallqlab/lab_resources/mh_vba')); % QUESTION 1: Do you have files in this mh_vba sitting on the cluster somewhere?
+addpath(genpath('/proj/mnhallqlab/lab_resources/mh_vba'));
 
 %% set environment and define file locations
 
@@ -41,7 +41,7 @@ addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox'));
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source = [project_repo, '/data/', subjID];  %CHECK
-
+disp(data_source)
 %%
 %vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
 
@@ -131,9 +131,6 @@ for mnum = 1:length(models)
             m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
         end
     end
-    
-    % QUESTION 2: Did we decide not to save the individual subject results
-    % from VBA to save space? ids, L, vo, s_all?
     
     %save group outputs for now
     save(sprintf('%s/group_fits_%s_%s', vo.output_dir, vo.model, vo.dataset), 'ids', 'L', 'vo', 's_all');
