@@ -15,7 +15,7 @@ clear;
 %% external settings
 
 %subjID = getenv("subj");
-subjID = 'cond000011';
+subjID = 'cond000012';
 
 %%
 
@@ -41,7 +41,6 @@ addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox'));
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
 %data_source=[project_repo, '/data/vba_input_simulated_n5_minimal'];
 data_source = [project_repo, '/', subjID];  %CHECK
-disp(data_source)
 %%
 %vba_working_dir = fileparts(mfilename('fullpath')); %for paths relative to the vba repo
 
@@ -125,11 +124,11 @@ for mnum = 1:length(models)
         
         %write subject data to mat file only if just fitted, not loaded. This is necessary because the HDF5 format in
         %recent MATLAB .mat files will append to cell arrays implicitly, making the .mat files grow with every save
-        if fit_subj == 1
-            %parsave doesn't work in recent MATLAB versions.
-            m=matfile(o_file, 'writable',true);
-            m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
-        end
+%         if fit_subj == 1
+%             %parsave doesn't work in recent MATLAB versions.
+%             m=matfile(o_file, 'writable',true);
+%             m.posterior=posterior; m.out=out; m.subj_id=ids{sub}; m.subj_stats=s_all{sub};
+%         end
     end
     
     %save group outputs for now
