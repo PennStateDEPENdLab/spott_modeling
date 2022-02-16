@@ -14,7 +14,7 @@ $echo $subj
 module use /proj/mnhallqlab/sw/modules
 module load matlab/2021a
 
-matlab  -nodisplay -r matlabtest
+matlab  -nodisplay -r fit_group_vba_ffx_RM
 #/Applications/MATLAB_R2020b.app/bin/matlab -nodisplay -r fit_group_vba_ffx_RM
 
 #/Applications/MATLAB_R2020b.app/bin/matlab -nodisplay -r matlabtest
