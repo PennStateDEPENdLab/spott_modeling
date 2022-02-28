@@ -7,7 +7,7 @@ library(tidyverse)
 
 repo_dir <- "/proj/mnhallqlab/projects/spott_modeling"
 code_dir <- file.path(repo_dir, "code", "ins_forward_simulation")
-out_dir <- file.path(repo_dir, "par_sim")
+out_dir <- file.path(repo_dir, "par_sim/fix_omega_kappa")
 nsubjects <- 50
 model <- "time2pl"
 
@@ -29,7 +29,7 @@ source("ins_learning_choice_rules.R")
 gvals <- 1.1^(seq(from=-30, to=25, length.out=20)) # prioritize low values. spans .057 -- 10.83
 
 # means of kappa
-kvals <- 1.14^(seq(-10, 20, 2)) # prioritize low values. spans .27 -- 13.74
+kvals <- c(1, 4, 8) #1.14^(seq(-10, 20, 2)) # prioritize low values. spans .27 -- 13.74
 
 sim_grid <- expand.grid(
   model = model,
@@ -40,7 +40,7 @@ sim_grid <- expand.grid(
   gamma_mean = gvals,
   nu_mean = seq(-5, 5, by = 1),
   nu_sd = 1,
-  omega_mean = seq(-5, 5, by = 1), # increment by 1
+  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1
   omega_sd = 1,
   kappa_mean = kvals
 )
