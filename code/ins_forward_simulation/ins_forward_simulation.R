@@ -23,7 +23,7 @@ source("code/ins_forward_simulation/ins_learning_choice_rules.R")
 
 # general settings for main model  
 value2pl_params <- list(
-  value=c(     alpha=0.1,   gamma=2,   nu=-1,   beta=200, omega=0, kappa=8), #make it more decisive/exploitative
+  value=c(     alpha=0.1,   gamma=2,   nu=-1,   beta=200, omega=0, kappa=2), #make it more decisive/exploitative
   lower=c(     alpha=0.001, gamma=0.1, nu=0,   beta=25,  omega=-10,    kappa=0.001),
   upper=c(     alpha=0.99,  gamma=100, nu=5,   beta=500, omega=10,    kappa=10),
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, beta=1e0, omega=1e-1, kappa=1e-1)
@@ -37,6 +37,27 @@ time2pl_params <- list(
   upper=c(     alpha=0.99,  gamma=100, nu=5,   omega=10,   kappa=10),
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, omega=1e-1, kappa=1e-1)
 )
+
+
+sim_grid <- expand.grid(gamma_vals = seq(0.001, 100, by=1),
+                        nu_vals <- seq(-5, 5, by=.01))
+
+# loop over rows of sim_grid and pass to p_response_tdiff
+# use aes(fill = pred) + geom_tile()
+
+gamma_vals <- seq(0.001, 100, by=1)
+pred <- sapply(gamma_vals, function(x) {
+  p_response_tdiff(Q=c(.5, .5), tau=1000, rt_last=800, gamma=x, nu=-5)
+})
+
+plot(gamma_vals, pred)
+
+nu_vals <- seq(-5, 5, by=.01)
+pred <- sapply(nu_vals, function(x) {
+  p_response_tdiff(Q=c(.9, .9), tau=1900, rt_last=900, gamma=10, nu=x)
+})
+
+plot(nu_vals, pred)
 
 # prew is a list of expressions that are evaluated inside the function to generate reward probabilities
 # for each action. The length of prew determines the number of actions used in the simulations.
