@@ -9,7 +9,7 @@ repo_dir <- "/proj/mnhallqlab/projects/spott_modeling"
 code_dir <- file.path(repo_dir, "code", "ins_forward_simulation")
 out_dir <- file.path(repo_dir, "par_sim/fix_omega_kappa")
 nsubjects <- 50
-model <- "time2pl"
+model <- "exp"
 
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
@@ -94,7 +94,7 @@ res <- foreach(
   .export = c("rgamma_moments", "gamma_params_from_moments") # not picked up automatically by code analyzer inside expression
 ) %dorng% {
   these_params <- list(
-    model = "time2pl",
+    model = "exp",
     alpha = expression(rtruncnorm(nsubjects, a=cond$alpha_min, b=cond$alpha_max, mean=cond$alpha_mean, sd=cond$alpha_sd)),
     gamma = expression(rgamma_moments(nsubjects, mean = cond$gamma_mean, sd = cond$gamma_sd)),
     nu = expression(rnorm(nsubjects, mean = cond$nu_mean, sd = cond$nu_sd)),
