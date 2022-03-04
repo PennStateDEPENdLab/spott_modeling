@@ -65,8 +65,8 @@ plot(nu_vals, pred)
 task_environment <- setup_task_environment(
   prew=list(
     expression(grwalk(n_trials, start=0.7, 0.08)),
-    expression(grwalk(n_trials, start=0.5, 0.08)),
-    expression(grwalk(n_trials, start=0.3, 0.1))
+    expression(grwalk(n_trials, start=0.5, 0.08))#,
+    #expression(grwalk(n_trials, start=0.3, 0.1)) #need to delete one line to have 2 options
   ),
   n_trials=200,
   model="time2pl" #note that the $model element can be edited and then passed back into a simulation function
