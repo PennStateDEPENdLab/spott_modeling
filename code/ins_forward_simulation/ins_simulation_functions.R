@@ -140,6 +140,12 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
         Q, tau=time_vec[j], rt_last = rt_last, 
         gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=FALSE)  
     }
+  } else if (model %in% c("exp")) {
+    loc_presp <- function(Q, tau, rt_last) {
+      p_response_tdiff(
+        Q, tau=time_vec[j], rt_last = rt_last, 
+        gamma=params["gamma"], nu=params["nu"])  
+    }
   } else if (model == "time2pl_noQ") {
     loc_presp <- function(Q, tau, rt_last) {
       p_response_tdiff(
