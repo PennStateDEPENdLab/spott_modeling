@@ -38,7 +38,6 @@ time2pl_params <- list(
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, omega=1e-1, kappa=1e-1)
 )
 
-
 sim_grid <- expand.grid(gamma_vals = seq(0.001, 100, by=1),
                         nu_vals <- seq(-5, 5, by=.01))
 
