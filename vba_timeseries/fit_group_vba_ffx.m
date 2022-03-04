@@ -44,7 +44,7 @@ inputfiles = arrayfun(@(x) fullfile(x.folder, x.name), inputfiles, 'UniformOutpu
 
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
 %models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
-models = {'time2pl', 'notime', 'zetaexponent'};
+models = {'time2pl', 'notime', 'zetaexponent', 'value2pl'};
 
 %inputfiles = inputfiles(23:26);
 
@@ -68,7 +68,7 @@ for mnum = 1:length(models)
     % Subject statistics cell vector
     s_all = cell(1,length(inputfiles));
 
-    for sub = 1:length(inputfiles)
+    parfor sub = 1:length(inputfiles)
         o_file=sprintf('%s/fit_%s_%s_multisession%d', ...
             vo.output_dir, ids{sub}, vo.model, vo.multisession);
         
