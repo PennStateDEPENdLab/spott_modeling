@@ -16,7 +16,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     trial_ms = trial_ms, #6 seconds
     bin_ms = bin_ms, # ms
     n_timesteps = trial_ms/bin_ms,
-    model=NULL
+    model=model
   )
   
   # These random numbers need to be constant in optimization so that the cost function is on the same scale across iterations
@@ -135,16 +135,17 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
                  gamma=params["gamma"], nu=params["nu"], beta=params["beta"])  
     }
   } else if (model %in% c("time2pl")) {
+    # at present time2pl variants do not have a beta parameter (numerator is always 1.0)
     loc_presp <- function(Q, tau, rt_last) {
       p_response_tdiff(
         Q, tau=time_vec[j], rt_last = rt_last, 
-        gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=FALSE)  
+        gamma=params["gamma"], nu=params["nu"], no_Q=FALSE) # beta=params["beta"], 
     }
   } else if (model == "time2pl_noQ") {
     loc_presp <- function(Q, tau, rt_last) {
       p_response_tdiff(
         Q, tau=time_vec[j], rt_last = rt_last, 
-        gamma=params["gamma"], nu=params["nu"], beta=params["beta"], no_Q=TRUE)
+        gamma=params["gamma"], nu=params["nu"], no_Q=TRUE) # beta=params["beta"], 
     }
   } else if (model == "notime") {
     stop("Not implemented")
@@ -379,6 +380,25 @@ sim_data_for_stan <- function(params, task_environment, n=100) {
   return(subj_data)
 }
 
+# use method of moments to approximate gamma rate and shape based on mean and sd
+# mu is mean of desired mean, sigma is standard deviation
+gamma_params_from_moments <- function(mu, sigma) {
+  checkmate::assert_number(mu, lower=0)
+  checkmate::assert_number(sigma, lower = 0)
+
+  s2 <- sigma^2
+  scale_hat <- s2 / mu
+  rate_hat <- 1 / scale_hat
+  shape_hat <- mu / scale_hat
+  
+  return(c(shape = shape_hat, rate = rate_hat, scale = scale_hat))
+}
+
+rgamma_moments <- function(n, mean, sd) {
+  moments <- gamma_params_from_moments(mean, sd)
+  rgamma(n, shape = moments["shape"], scale = moments["scale"])
+}
+
 # function to simulate free operant behavior in SPOTT for multiple subjects, allowing for
 # between-subject variation in the sample parameter distribution
 sim_spott_free_operant_group <- function(
@@ -387,33 +407,41 @@ sim_spott_free_operant_group <- function(
   
   pacman::p_load(truncnorm)
   
-  param_defaults <- list(
-    model="value2pl",
-    alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
-    gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
-    nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
-    # beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
-    beta=expression(rgamma(nsubjects, shape=50, rate=1)), #motor recovery
-    omega=expression(rnorm(nsubjects, mean=1, sd=2)), #switch omega/stickiness
-    kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
-  )
+  # removing parameter defaults for now to force clear specification upstream
+  # param_defaults <- list(
+  #   model="value2pl",
+  #   alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=0.2, sd=0.2)),
+  #   gamma=expression(rgamma(nsubjects, shape=3, rate=1)),
+  #   nu=expression(rnorm(nsubjects, mean=0, sd=0)), #deprecated parameter
+  #   # beta=expression(rgamma(nsubjects, shape=4, rate=1/100)), #motor recovery
+  #   beta=expression(rgamma(nsubjects, shape=50, rate=1)), #motor recovery
+  #   omega=expression(rnorm(nsubjects, mean=1, sd=2)), #switch omega/stickiness
+  #   kappa=expression(rgamma(nsubjects, shape=3, rate=1)) #(inverse) temperature on value-guided component of choice
+  # )
   
-  #fill in defaults for any parameters not passed in
-  for (pname in names(param_defaults)) {
-    if (is.null(parameters[[pname]])) {
-      parameters[[pname]] <- param_defaults[[pname]]
-    }
-  }
+  # #fill in defaults for any parameters not passed in
+  # for (pname in names(param_defaults)) {
+  #   if (is.null(parameters[[pname]])) {
+  #     parameters[[pname]] <- param_defaults[[pname]]
+  #   }
+  # }
   
   set.seed(seed) #keep sims consistent
   
+  # models that don't use beta (like time2pl) should fix beta to 1e-10 to make numerator 1.0
+  if (is.null(parameters$beta)) {
+    parameters$beta <- 1e-10
+  }
+
   #simulate subject parameters
-  alpha_subj <- eval(parameters$alpha)
-  gamma_subj <- eval(parameters$gamma)
-  nu_subj <- eval(parameters$nu)
-  beta_subj <- eval(parameters$beta)
-  omega_subj <- eval(parameters$omega)
-  kappa_subj <- eval(parameters$kappa)
+  # note that the use of parent.frame() should work in general if the list is setup in the environment
+  # in which sim_spott_free_operant_group was called. We may have to adjust for other cases
+  alpha_subj <- eval(parameters$alpha, envir = parent.frame())
+  gamma_subj <- eval(parameters$gamma, envir = parent.frame())
+  nu_subj <- eval(parameters$nu, envir = parent.frame())
+  beta_subj <- eval(parameters$beta, envir = parent.frame())
+  omega_subj <- eval(parameters$omega, envir = parent.frame())
+  kappa_subj <- eval(parameters$kappa, envir = parent.frame())
   
   parmat <- cbind(alpha=alpha_subj, gamma=gamma_subj, nu=nu_subj, beta=beta_subj, omega=omega_subj, kappa=kappa_subj)
   
