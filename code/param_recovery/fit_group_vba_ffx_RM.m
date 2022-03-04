@@ -15,6 +15,7 @@ clear;
 %% external settings
 
 subjID = getenv("subj");
+subjID = '000123';
 
 %%
 
