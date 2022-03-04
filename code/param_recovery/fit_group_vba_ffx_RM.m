@@ -15,7 +15,7 @@ clear;
 %% external settings
 
 subjID = getenv("subj");
-subjID = 'cond000123';
+disp(subjID)
 
 %%
 
