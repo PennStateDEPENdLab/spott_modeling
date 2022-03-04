@@ -138,8 +138,14 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
     # at present time2pl variants do not have a beta parameter (numerator is always 1.0)
     loc_presp <- function(Q, tau, rt_last) {
       p_response_tdiff(
-        Q, tau=time_vec[j], rt_last = rt_last, 
+        Q, tau = tau, rt_last = rt_last, 
         gamma=params["gamma"], nu=params["nu"], no_Q=FALSE) # beta=params["beta"], 
+    }
+  } else if (model %in% c("exp")) {
+    loc_presp <- function(Q, tau, rt_last) {
+      p_response_exp(
+        Q, tau=tau, rt_last = rt_last, 
+        gamma=params["gamma"], nu=params["nu"])  
     }
   } else if (model == "time2pl_noQ") {
     loc_presp <- function(Q, tau, rt_last) {
