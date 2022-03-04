@@ -48,6 +48,7 @@ p_response_tdiff <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1, beta=1e-1
     Qstar <- sum(Q)/eta #total environmental value 
   }
   
+  # N.B. Default beta of 1e-10 makes phi 1.0 for all positive values of tau - rt_last.
   phi <- 1 - exp(-(tau - rt_last)/beta) #recovery function (motor speed)
   
   tdiff = (tau - rt_last)/1000 # rescale parameters in seconds (avoid crazy values)

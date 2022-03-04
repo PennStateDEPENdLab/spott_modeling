@@ -30,13 +30,13 @@ value2pl_params <- list(
 )
 
 # general settings for time2pl model -- haven't spent time on this yet, but probably not grossly wrong (Sep2021)
+# time2pl does not have a beta parameter (1.0 in numerator)
 time2pl_params <- list(
-  value=c(     alpha=0.1,   gamma=2,   nu=-1,  omega=0,   kappa=2), #make it more decisive/exploitative
+  value=c(     alpha=0.1,   gamma=2,   nu=-1,  omega=0,   kappa=8), #make it more decisive/exploitative
   lower=c(     alpha=0.001, gamma=0.1, nu=0,   omega=-10,  kappa=0.001),
   upper=c(     alpha=0.99,  gamma=100, nu=5,   omega=10,   kappa=10),
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, omega=1e-1, kappa=1e-1)
 )
-
 
 sim_grid <- expand.grid(gamma_vals = seq(0.001, 100, by=1),
                         nu_vals <- seq(-5, 5, by=.01))
@@ -57,7 +57,6 @@ pred <- sapply(nu_vals, function(x) {
 })
 
 plot(nu_vals, pred)
-
 
 # prew is a list of expressions that are evaluated inside the function to generate reward probabilities
 # for each action. The length of prew determines the number of actions used in the simulations.
