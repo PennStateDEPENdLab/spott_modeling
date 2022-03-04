@@ -60,9 +60,9 @@ p_response_tdiff <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1, beta=1e-1
 
 # New exponential recovery (2022, much preferred solution)
 # multiple process decay -- constant plus value-guided recovery
-p_response_exp <- function(Qstar, tdiff=NULL, gamma=1, nu=1) {
-  
-  tdiff = tdiff/1000 # rescale parameters in seconds (avoid crazy values)
+p_response_exp <- function(Q, tau=NULL, rt_last=NULL, gamma=1, nu=1) {
+  Qstar <- sum(Q) #total environmental value 
+  tdiff <- (tau - rt_last)/1000 # rescale parameters in seconds (avoid crazy values)
   
   p_respond_tb <- 1 - exp(-1*(nu + gamma*Qstar)*tdiff)
   return(p_respond_tb)

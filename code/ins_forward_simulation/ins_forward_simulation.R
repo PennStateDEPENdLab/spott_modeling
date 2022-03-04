@@ -38,25 +38,34 @@ time2pl_params <- list(
   par_scale=c( alpha=1e-1,  gamma=1e1, nu=1e0, omega=1e-1, kappa=1e-1)
 )
 
-sim_grid <- expand.grid(gamma_vals = seq(0.001, 100, by=1),
-                        nu_vals <- seq(-5, 5, by=.01))
 
-# loop over rows of sim_grid and pass to p_response_tdiff
-# use aes(fill = pred) + geom_tile()
-
-gamma_vals <- seq(0.001, 100, by=1)
-pred <- sapply(gamma_vals, function(x) {
-  p_response_tdiff(Q=c(.5, .5), tau=1000, rt_last=800, gamma=x, nu=-5)
-})
-
-plot(gamma_vals, pred)
-
-nu_vals <- seq(-5, 5, by=.01)
-pred <- sapply(nu_vals, function(x) {
-  p_response_tdiff(Q=c(.9, .9), tau=1900, rt_last=900, gamma=10, nu=x)
-})
-
-plot(nu_vals, pred)
+# general settings for exponential decay model (2022)
+exp_params <- list(
+  value=c(    alpha =  0.1, gamma =    .1,   nu  =    1, omega = 0,    kappa = 8), 
+  lower=c(    alpha = .001, gamma = 1e-10,   nu = 1e-10, omega = -10,  kappa = 0.001),
+  upper=c(    alpha = 0.99, gamma =    10,   nu =    10, omega = 10,   kappa = 20),
+  par_scale=c(alpha = 1e-1, gamma=   1e-1,   nu = 1e-1,  omega = 1e-1, kappa = 1e-1)
+)
+# simple nu-gamma plots
+# sim_grid <- expand.grid(gamma_vals = seq(0.001, 100, by=1),
+#                         nu_vals <- seq(-5, 5, by=.01))
+# 
+# # loop over rows of sim_grid and pass to p_response_tdiff
+# # use aes(fill = pred) + geom_tile()
+# 
+# gamma_vals <- seq(0.001, 100, by=1)
+# pred <- sapply(gamma_vals, function(x) {
+#   p_response_tdiff(Q=c(.5, .5), tau=1000, rt_last=800, gamma=x, nu=-5)
+# })
+# 
+# plot(gamma_vals, pred)
+# 
+# nu_vals <- seq(-5, 5, by=.01)
+# pred <- sapply(nu_vals, function(x) {
+#   p_response_tdiff(Q=c(.9, .9), tau=1900, rt_last=900, gamma=10, nu=x)
+# })
+# 
+# plot(nu_vals, pred)
 
 # prew is a list of expressions that are evaluated inside the function to generate reward probabilities
 # for each action. The length of prew determines the number of actions used in the simulations.
@@ -67,8 +76,7 @@ task_environment <- setup_task_environment(
     expression(grwalk(n_trials, start=0.5, 0.08))#,
     #expression(grwalk(n_trials, start=0.3, 0.1)) #need to delete one line to have 2 options
   ),
-  n_trials=200,
-  model="time2pl" #note that the $model element can be edited and then passed back into a simulation function
+  n_trials=200
 )
 
 #run the value2pl model at these parameter settings.
@@ -79,22 +87,29 @@ ins_results_value2pl <- ins_wins(params=value2pl_params$value, fixed=NULL, task_
 task_environment$model <- "time2pl"
 ins_results_time2pl <- ins_wins(params=time2pl_params$value, fixed=NULL, task_environment, optimize=FALSE)
 
+# run the exp model (2022) at these parameter settings
+task_environment$model <- "exp"
+ins_results_exp <- ins_wins(params=exp_params$value, fixed=NULL, task_environment, optimize=FALSE)
+
 #get summary statistics
 sstats_value2pl <- get_sim_stats(ins_results_value2pl, task_environment)
 sstats_time2pl <- get_sim_stats(ins_results_time2pl, task_environment)
+sstats_exp <- get_sim_stats(ins_results_exp, task_environment)
 # sum_df <- sstats$sum_df
 # all_df <- sstats$all_df
 
 #simulate data for stan fitting
 #test_stan_sim <- sim_data_for_stan (value2pl_params$value, task_environment, n=100)
 
+nsubjects <- 20
+
 #simulate data using a population distribution on the parameters -- takes a few minutes
 stan_population <- sim_spott_free_operant_group(
-  nsubjects=20, task_environment = task_environment,
+  nsubjects=nsubjects, task_environment = task_environment,
   parameters=list( 
     # use this list to provide expressions that are evaluated to generate group parameter distributions
     # note that there are internal defaults in the function that fill in unspecified parameters
-    model="value2pl",
+    model="exp",
     kappa=expression(rnorm(nsubjects, 10, 1)),
     beta=expression(rnorm(nsubjects, 1, .1)),
     omega=expression(rnorm(nsubjects, 1.5, .3)),
