@@ -11,6 +11,10 @@ out_dir <- file.path(repo_dir, "par_sim_exp/fix_omega_kappa")
 nsubjects <- 50
 model <- "exp"
 
+if (!dir.exists(file.path(repo_dir, "par_sim_exp"))) {
+  dir.create(file.path(repo_dir, "par_sim_exp"))
+}
+
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
 }
