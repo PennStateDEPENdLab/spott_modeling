@@ -40,8 +40,8 @@ vo.phi_names = {'gamma', 'nu', 'kappa', 'omega'};
 priors.muTheta = zeros(vo.n_theta, 1);
 priors.SigmaTheta = 1e1*eye(vo.n_theta); %variance of 10 on all
 
-priors.muPhi = [ 0; ... %gamma: exponentiates to 1
-    0; ... %nu: keep at zero prior
+priors.muPhi = [ 0; ... %gamma: exponential transform = 1
+    0; ... %nu: exponential transform = 1
     0; ... %kappa (temperature); Gamma(2,1) transform to 1.67
     0 ]; %omega sticky weight: keep at 0 prior
 
