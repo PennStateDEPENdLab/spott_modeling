@@ -6,7 +6,8 @@ library(iterators)
 library(tidyverse)
 
 repo_dir <- "/proj/mnhallqlab/projects/spott_modeling"
-code_dir <- file.path(repo_dir, "code", "ins_forward_simulation")
+# code_dir <- file.path(repo_dir, "code", "ins_forward_simulation")
+code_dir <- "/nas/longleaf/home/maruofan/GitHub/spott_modeling/code/ins_forward_simulation"
 out_dir <- file.path(repo_dir, "par_sim_exp/fix_omega_kappa")
 nsubjects <- 50
 model <- "exp"
