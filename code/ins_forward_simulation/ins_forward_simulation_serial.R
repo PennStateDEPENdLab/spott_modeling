@@ -35,8 +35,9 @@ task_environment <- setup_task_environment(
 
 #run the exp model at these parameter settings.
 task_environment$model <- "exp"
+nsubjects=20
 
-for (i in c(11:15)){
+for (i in c(16:17)){
   these_params <- list(
     alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid$alpha[i], sd=0.2)),
     gamma=expression(rgamma(nsubjects, shape=sim_grid$gamma[i], rate=1)),
