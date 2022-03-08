@@ -9,7 +9,7 @@ repo_dir <- "/proj/mnhallqlab/projects/spott_modeling"
 code_dir <- file.path(repo_dir, "code", "ins_forward_simulation")
 out_dir <- file.path(repo_dir, "par_sim_exp/fix_omega_kappa")
 nsubjects <- 50
-model <- "exp"
+model <- "time2pl"
 
 if (!dir.exists(file.path(repo_dir, "par_sim_exp"))) {
   dir.create(file.path(repo_dir, "par_sim_exp"))
@@ -57,7 +57,7 @@ sim_grid$cond_id <- 1:nrow(sim_grid)
 # subset for testing
 # sim_grid <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
 # sim_grid <- sim_grid[c(16:20, 1016:1020, 10016:10020, 100016:100020),]
-sim_grid <- sim_grid[c(11:15),]
+sim_grid <- sim_grid[c(11:12),]
 
 # sets how many items from the dataframe are sent to each parallel execution of the loop
 # if you set it too low (e.g. 3), you'll get a *lot* of separate, brief jobs on the scheduler,
@@ -100,7 +100,7 @@ res <- foreach(
   .export = c("rgamma_moments", "gamma_params_from_moments") # not picked up automatically by code analyzer inside expression
 ) %dorng% {
   these_params <- list(
-    model = "exp",
+    model = "time2pl",
     alpha = expression(rtruncnorm(nsubjects, a=cond$alpha_min, b=cond$alpha_max, mean=cond$alpha_mean, sd=cond$alpha_sd)),
     gamma = expression(rgamma_moments(nsubjects, mean = cond$gamma_mean, sd = cond$gamma_sd)),
     nu = expression(rnorm(nsubjects, mean = cond$nu_mean, sd = cond$nu_sd)),
