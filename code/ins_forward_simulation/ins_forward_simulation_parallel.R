@@ -110,13 +110,13 @@ res <- foreach(
 
   # setup output folder for this sim
   cond_out_dir <- file.path(out_dir, sprintf("cond%06d", cond$cond_id))
-  # if (!dir.exists(cond_out_dir)) {
-  #   dir.create(cond_out_dir)
-  # } else {
-  #   # may want to support a global overwrite = TRUE/FALSE setting
-  #   cat(sprintf("Sim directory %s already exists. Skipping it for now.\n", cond_out_dir))
-  #   return(invisible(NULL)) # drop out before we do anything
-  # }
+  if (!dir.exists(cond_out_dir)) {
+    dir.create(cond_out_dir)
+  } else {
+    # may want to support a global overwrite = TRUE/FALSE setting
+    cat(sprintf("Sim directory %s already exists. Skipping it for now.\n", cond_out_dir))
+    return(invisible(NULL)) # drop out before we do anything
+  }
 
   # simulate data using a population distribution on the parameters -- takes a few minutes
   stan_population <- sim_spott_free_operant_group(
