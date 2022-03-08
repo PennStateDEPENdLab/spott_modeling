@@ -7,8 +7,8 @@ function  [ gx ] = m_suuvid_obs_exp(Xt, phi, u, inG)
 % OUTPUT
 % - gx : p(chosen|x_t)
 
-phi = transform_phi(phi, inG); %value-based recovery component
-gamma = phi(1); %slope on logistic (sensitivity)
+phi = transform_phi(phi, inG); 
+gamma = phi(1); %value-based recovery component
 nu = phi(2); %basal recovery component
 kappa = phi(3); %softmax temperature
 omega = phi(4); %stickiness
