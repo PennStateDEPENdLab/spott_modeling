@@ -18,6 +18,7 @@ if (!dir.exists(file.path(repo_dir, "par_sim_exp"))) {
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
 }
+
 setwd(code_dir)
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
