@@ -1,11 +1,15 @@
-rm(list=ls())
-
 library(tidyverse)
 
+rm(list=ls())
+
 repo_dir <- "~/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling"
+
+setwd("~/Documents/GitHub/spott_modeling/code/ins_forward_simulation")
+
+source("ins_simulation_functions.R")
+source("ins_learning_choice_rules.R")
+
 setwd(repo_dir)
-source("ins_forward_simulation/ins_simulation_functions.R")
-source("ins_forward_simulation/ins_learning_choice_rules.R")
 
 sim_grid <- expand.grid(alpha=seq(0.001, 0.9, by=0.1), # increment 0.1 <- 0.01
                         gamma=seq(0.1, 100, by = 3),  # increment 1 <- 0.1
@@ -26,14 +30,13 @@ task_environment <- setup_task_environment(
     #expression(grwalk(n_trials, start=0.3, 0.1)) #need to delete one line to have 2 options
   ),
   n_trials=200,
-  model="time2pl" #note that the $model element can be edited and then passed back into a simulation function
+  model="exp" #note that the $model element can be edited and then passed back into a simulation function
 )
 
-#run the time2pl model at these parameter settings.
-task_environment$model <- "time2pl"
+#run the exp model at these parameter settings.
+task_environment$model <- "exp"
 
-for (i in c(11:15, 1011:1015, 10011:10015, 100011:100015)){
-  
+for (i in c(11:15)){
   these_params <- list(
     alpha=expression(rtruncnorm(nsubjects, a=0.01, b=0.99, mean=sim_grid$alpha[i], sd=0.2)),
     gamma=expression(rgamma(nsubjects, shape=sim_grid$gamma[i], rate=1)),

@@ -7,9 +7,9 @@ function  [ gx ] = m_suuvid_obs_exp(Xt, phi, u, inG)
 % OUTPUT
 % - gx : p(chosen|x_t)
 
-phi = transform_phi(phi, inG);
+phi = transform_phi(phi, inG); %value-based recovery component
 gamma = phi(1); %slope on logistic (sensitivity)
-nu = phi(2); %basal vigor as a function of time elapsed
+nu = phi(2); %basal recovery component
 kappa = phi(3); %softmax temperature
 omega = phi(4); %stickiness
 
@@ -29,7 +29,7 @@ Qtot = sum(Qcur); %total value
 %end
 %p_respond = 1/(1 + exp(-gamma * Qtot * (tdiffR - nu)));
 %p_respond = 1/(1 + exp(-gamma * Qtot * (tdiff/1000 + nu)));
-p_respond = 1-expexp(-1*(nu + gamma*Qtot)*tdiff/1000);
+p_respond = 1-exp(-1*(nu + gamma*Qtot)*tdiff/1000);
 %which action to choose
 
 cc = zeros(n_actions,1); %row vector, as with Q
