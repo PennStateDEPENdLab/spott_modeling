@@ -35,7 +35,7 @@ addpath(genpath('/proj/mnhallqlab/lab_resources/mh_vba'));
 % addpath(genpath('/Users/ruofanma/Documents/MATLAB/VBA-toolbox')); 
 
 % LL path
-project_repo = '/proj/mnhallqlab/projects/spott_modeling/par_sim/fix_omega_kappa';
+project_repo = '/proj/mnhallqlab/projects/spott_modeling/par_sim_exp/fix_omega_kappa';
 addpath(genpath('/proj/mnhallqlab/lab_resources/VBA-toolbox')); 
 
 %data_source=[project_repo, '/data/vba_input_simulated_n80'];
@@ -76,7 +76,7 @@ inputfiles = arrayfun(@(x) fullfile(x.folder, x.name), inputfiles, 'UniformOutpu
 %models = {'suuvid_base', 'suuvid_nonu', 'suuvid_fixbeta', 'suuvid_nobeta'};
 %models = {'fixbeta', 'nobeta', 'nonu_nobeta', 'nonu', 'zetaexponent'};
 %models = {'time2pl', 'notime', 'zetaexponent'};
-models = {'time2pl'};  %CHECK
+models = {'exp'};  %CHECK
 
 %inputfiles = inputfiles(23:26);
 
@@ -91,7 +91,7 @@ for mnum = 1:length(models)
     if ~exist(mdir, 'dir'), error('cannot locate model directory: %s', mdir); else, addpath(mdir); end
     vo = m_setup(vo); %setup this model
         
-    vo.output_dir = ['/proj/mnhallqlab/projects/spott_modeling/par_rec/rec_fix_omega_kappa', '/outputs/vba_out/ffx/', vo.dataset, '/', vo.model];
+    vo.output_dir = ['/proj/mnhallqlab/projects/spott_modeling/par_rec_exp/rec_fix_omega_kappa', '/outputs/vba_out/ffx/', vo.dataset, '/', vo.model];
     %vo.output_dir = [project_repo, '/outputs/vba_out/ffx/', vo.dataset, '/', vo.model];
     if ~exist(vo.output_dir, 'dir'), mkdir(vo.output_dir); end
 
