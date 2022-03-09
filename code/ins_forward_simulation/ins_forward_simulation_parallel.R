@@ -58,7 +58,7 @@ sim_grid$cond_id <- 1:nrow(sim_grid)
 # subset for testing
 # sim_grid <- sim_grid[c(11:15, 1011:1015, 10011:10015, 100011:100015),]
 # sim_grid <- sim_grid[c(16:20, 1016:1020, 10016:10020, 100016:100020),]
-sim_grid <- sim_grid[c(11:12),]
+# sim_grid <- sim_grid[c(11:12),]
 
 # sets how many items from the dataframe are sent to each parallel execution of the loop
 # if you set it too low (e.g. 3), you'll get a *lot* of separate, brief jobs on the scheduler,
