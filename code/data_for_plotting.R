@@ -25,7 +25,8 @@ sim_grid <- expand.grid(
 )
 
 # select data for testing
-data_ind <- c(1:150, 1900:2050, 4057:4107)
+# data_ind <- c(1:150, 1900:2050, 4057:4107)
+data_ind <- c(1:10)
 
 # Preapre data for plotting
 
