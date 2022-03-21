@@ -44,7 +44,7 @@ sim <- read.csv(paste0(sim_dir, simIDs[1,], "/stan_population_parameters_1.csv")
 est <- read.csv(paste0(vba_out_dir, simIDs[1,], "/exp/", simIDs[1,], "_exp_ffx_global_statistics.csv"))
 
 for(i in data_ind[2:length(data_ind)]){
-  sim_current <- read.csv(paste0(sim_dir, simIDs[i,], "/stan_population_parameters_1.csv"))
+  sim_current <- read.csv(paste0(sim_dir, simIDs[i,], "/stan_population_parameters_",i, ".csv"))
   est_current <- read.csv(paste0(vba_out_dir, simIDs[i,], "/exp/", simIDs[i,], "_exp_ffx_global_statistics.csv"))
   
   sim <- sim %>% rbind(sim_current)
