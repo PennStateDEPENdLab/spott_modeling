@@ -1,3 +1,5 @@
+library(dplyr)
+
 # Simulation settings should match ins_forward_simulation_parallel.R
 nsubjects <- 50
 model <- "exp"
