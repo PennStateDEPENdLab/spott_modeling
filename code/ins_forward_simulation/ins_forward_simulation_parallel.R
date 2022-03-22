@@ -35,7 +35,7 @@ source("ins_learning_choice_rules.R")
 gvals <- 1.1^(seq(from=-30, to=25, length.out=20)) # prioritize low values. spans .057 -- 10.83
 
 # means of kappa
-kvals <- c(1, 4, 8) #1.14^(seq(-10, 20, 2)) # prioritize low values. spans .27 -- 13.74
+kvals <- c(1, 4, 8) #1.14^(seq(-10, 20, 2)) # prioritize low values. spans .27 -- 13.74 #Zita: kappa=seq(1, 10, by=1))
 
 sim_grid <- expand.grid(
   model = model,
@@ -44,9 +44,9 @@ sim_grid <- expand.grid(
   alpha_min = 0.02, # set constraints on learning rates
   alpha_max = 0.98,
   gamma_mean = gvals,
-  nu_mean = seq(-5, 5, by = 1),
+  nu_mean = seq(1, 5, by = 1), # Keeping nu positive
   nu_sd = 1,
-  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1
+  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1 #Zita: omega=seq(0, 5, by=1)
   omega_sd = 1,
   kappa_mean = kvals
 )
@@ -104,7 +104,11 @@ res <- foreach(
     model = "exp",
     alpha = expression(rtruncnorm(nsubjects, a=cond$alpha_min, b=cond$alpha_max, mean=cond$alpha_mean, sd=cond$alpha_sd)),
     gamma = expression(rgamma_moments(nsubjects, mean = cond$gamma_mean, sd = cond$gamma_sd)),
-    nu = expression(rnorm(nsubjects, mean = cond$nu_mean, sd = cond$nu_sd)),
+    # nu = expression(rnorm(nsubjects, mean = cond$nu_mean, sd = cond$nu_sd)), # nu is not deprecated
+    #Zita, for nu below: We can also put a gamma distribution on it, similar to the other positive parameters, 
+    #                    but I was thinking that in Stan I do use a truncated normal as a population (level-2) distribution, 
+    #                   so it might be better to change to that. Or I will change the truncated normals in Stan to gamma.
+    nu=expression(rtruncnorm(nsubjects,  a=0.001, b=10, mean=sim_grid$nu[i], sd=.5)), 
     omega = expression(rnorm(nsubjects, mean = cond$omega_mean, cond$omega_sd)), # switch omega/stickiness
     kappa = expression(rgamma_moments(nsubjects, mean = cond$kappa_mean, sd = cond$kappa_sd)) # (inverse) temperature on value-guided component of choice
   )
@@ -129,7 +133,7 @@ res <- foreach(
     group_by(id) %>%
     summarize_at(vars(alpha, gamma, nu, beta, omega, kappa), mean)
 
-  # write groundtruth parameters for each subject
+  # write ground truth parameters for each subject
   write.csv(parmat, file = file.path(cond_out_dir, paste0("stan_population_parameters_", cond$cond_id, ".csv")), row.names = F)
 
   dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -beta, -omega, -kappa)
