@@ -108,7 +108,7 @@ res <- foreach(
     #Zita, for nu below: We can also put a gamma distribution on it, similar to the other positive parameters, 
     #                    but I was thinking that in Stan I do use a truncated normal as a population (level-2) distribution, 
     #                   so it might be better to change to that. Or I will change the truncated normals in Stan to gamma.
-    nu=expression(rtruncnorm(nsubjects,  a=0.001, b=10, mean=cond$nu[i], sd=.5)), 
+    nu=expression(rtruncnorm(nsubjects,  a=0.001, b=10, mean=cond$nu, sd=.5)), 
     omega = expression(rnorm(nsubjects, mean = cond$omega_mean, cond$omega_sd)), # switch omega/stickiness
     kappa = expression(rgamma_moments(nsubjects, mean = cond$kappa_mean, sd = cond$kappa_sd)) # (inverse) temperature on value-guided component of choice
   )
