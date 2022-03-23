@@ -3,7 +3,7 @@
 #SBATCH -p general
 #SBATCH -N 1
 #SBATCH --mem 64g
-#SBATCH -n 8
+#SBATCH -n 10
 #SBATCH -t 2:00:00
 
 
