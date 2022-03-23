@@ -1,5 +1,3 @@
-cond000021
-cond000022
 cond000023
 cond000024
 cond000025
