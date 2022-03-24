@@ -17,9 +17,12 @@ sim_grid <- expand.grid(
   alpha_min = 0.02, # set constraints on learning rates
   alpha_max = 0.98,
   gamma_mean = gvals,
-  nu_mean = seq(-5, 5, by = 1),
-  nu_sd = 1,
-  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1
+  nu_mean = seq(1, 5, by = 1), # Keeping nu positive
+  nu_sd = 0.5,
+  # nu_sd = 1,
+  nu_min = 0.001,
+  nu_max = 10,
+  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1 #Zita: omega=seq(0, 5, by=1)
   omega_sd = 1,
   kappa_mean = kvals
 )

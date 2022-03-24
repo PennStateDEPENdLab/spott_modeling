@@ -3,7 +3,7 @@ library(ggplot2)
 setwd("~/Documents/GitHub/spott_modeling/data")
 load("ggDF.RData")
 
-alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, shape=as.factor(kappa_mean))) +
+alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, color=as.factor(kappa_mean))) +
   geom_point() +
   xlab(sprintf("Sim learning rate (alpha), r: %4.2f", cor(ggDF$alpha,ggDF$alpha_transformed))) + ylab("Est learning rate") +
   geom_abline(intercept = 0) +
@@ -13,7 +13,6 @@ alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, shape=as.fac
   facet_grid(nu_mean~gamma_mean)
 
 plot(alphap)
-
 
 gammap <- ggplot(data = ggDF, aes(x = gamma, y = gamma_transformed, shape=as.factor(kappa_mean))) + 
   geom_point() +
