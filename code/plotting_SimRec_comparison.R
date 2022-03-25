@@ -14,7 +14,7 @@ alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, color=as.fac
 
 plot(alphap)
 
-gammap <- ggplot(data = ggDF, aes(x = gamma, y = gamma_transformed, shape=as.factor(kappa_mean))) + 
+gammap <- ggplot(data = ggDF, aes(x = gamma, y = gamma_transformed, color=as.factor(kappa_mean))) + 
   geom_point() +
   #geom_point(size = 2, color =  "deeppink4") +
   xlab(sprintf("Sim vigor sensitivity (gamma), r: %4.2f", cor(ggDF$gamma,ggDF$gamma.1))) + ylab("Est vigor sensitivity") +
@@ -27,14 +27,14 @@ gammap <- ggplot(data = ggDF, aes(x = gamma, y = gamma_transformed, shape=as.fac
 plot(gammap)
 
 
-nup <- ggplot(data = ggDF, aes(x = nu, y = nu_transformed, shape=as.factor(kappa_mean))) +
+nup <- ggplot(data = ggDF, aes(x = nu, y = nu_transformed, color=as.factor(kappa_mean))) +
   geom_point() +
   #geom_point(size = 2, color =  "deeppink4") +
-  xlab(sprintf("Sim basal vigor (nu), r: %4.2f", cor(ggDF$nu,ggDF$nu))) + ylab("Est basal vigor") +
+  xlab(sprintf("Sim basal vigor (nu), r: %4.2f", cor(ggDF$nu,ggDF$nu_transformed))) + ylab("Est basal vigor") +
   geom_abline(intercept = 0) +
   #geom_errorbar(aes(ymin=XX, ymax=XX), width=.1, color =  "deeppink3") +
-  ylim(min(min(ggDF$nu), min(ggDF$nu)),max(max(ggDF$nu), max(ggDF$nu))) + 
-  xlim(min(min(ggDF$nu), min(ggDF$nu)),max(max(ggDF$nu), max(ggDF$nu))) +
+  ylim(min(min(ggDF$nu), min(ggDF$nu_transformed)),max(max(ggDF$nu), max(ggDF$nu_transformed))) + 
+  xlim(min(min(ggDF$nu), min(ggDF$nu_transformed)),max(max(ggDF$nu), max(ggDF$nu_transformed))) +
   facet_grid(gamma_mean~alpha_mean)
 
 plot(nup)
