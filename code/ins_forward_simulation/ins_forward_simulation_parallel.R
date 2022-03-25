@@ -44,8 +44,8 @@ sim_grid <- expand.grid(
   alpha_min = 0.02, # set constraints on learning rates
   alpha_max = 0.98,
   gamma_mean = gvals,
-  nu_mean = seq(1, 5, by = 1), # Keeping nu positive
-  nu_sd = 0.5,
+  nu_mean = c(0.25, 0.5, 1, 1.5, 2, 2.5), # Keeping nu positive
+  nu_sd = 0.3,
   # nu_sd = 1,
   nu_min = 0.001,
   nu_max = 10,
