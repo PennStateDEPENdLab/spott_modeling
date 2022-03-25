@@ -27,6 +27,24 @@ sim_grid <- expand.grid(
   kappa_mean = kvals
 )
 
+# # smaller nu values
+# sim_grid <- expand.grid(
+#   model = model,
+#   alpha_mean = seq(0.1, 0.9, by = 0.1), # increment 0.1 <- 0.01
+#   alpha_sd = 0.1, # fixed for now
+#   alpha_min = 0.02, # set constraints on learning rates
+#   alpha_max = 0.98,
+#   gamma_mean = gvals,
+#   nu_mean = c(0.25, 0.5, 1, 1.5, 2, 2.5), # Keeping nu positive
+#   nu_sd = 0.3,
+#   # nu_sd = 1,
+#   nu_min = 0.001,
+#   nu_max = 10,
+#   omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1 #Zita: omega=seq(0, 5, by=1)
+#   omega_sd = 1,
+#   kappa_mean = kvals
+# )
+
 # select data for testing
 # data_ind <- c(1:150, 1900:2050, 4057:4107)
 data_ind <- c(1:2700)

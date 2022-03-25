@@ -1,6 +1,7 @@
 library(ggplot2)
 
-setwd("~/Documents/GitHub/spott_modeling/data")
+# setwd("~/Documents/GitHub/spott_modeling/data")
+setwd("~/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling/data")
 load("ggDF.RData")
 
 alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, color=as.factor(kappa_mean))) +
