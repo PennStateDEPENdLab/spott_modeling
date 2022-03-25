@@ -92,7 +92,7 @@ task_environment <- setup_task_environment(
     expression(grwalk(n_trials, start = 0.7, 0.08)),
     expression(grwalk(n_trials, start = 0.3, 0.08))
   ),
-  n_trials = 50,
+  n_trials = 20,
   model = model # note that the $model element can be edited and then passed back into a simulation function
 )
 
