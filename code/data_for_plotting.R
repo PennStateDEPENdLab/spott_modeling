@@ -10,24 +10,6 @@ gvals <- 1.1^(seq(from=-30, to=25, length.out=20)) # prioritize low values. span
 # means of kappa
 kvals <- c(1, 4, 8) #1.14^(seq(-10, 20, 2)) # prioritize low values. spans .27 -- 13.74
 
-sim_grid <- expand.grid(
-  model = model,
-  alpha_mean = seq(0.1, 0.9, by = 0.1), # increment 0.1 <- 0.01
-  alpha_sd = 0.1, # fixed for now
-  alpha_min = 0.02, # set constraints on learning rates
-  alpha_max = 0.98,
-  gamma_mean = gvals,
-  nu_mean = seq(1, 5, by = 1), # Keeping nu positive
-  nu_sd = 0.5,
-  # nu_sd = 1,
-  nu_min = 0.001,
-  nu_max = 10,
-  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1 #Zita: omega=seq(0, 5, by=1)
-  omega_sd = 1,
-  kappa_mean = kvals
-)
-
-# # smaller nu values
 # sim_grid <- expand.grid(
 #   model = model,
 #   alpha_mean = seq(0.1, 0.9, by = 0.1), # increment 0.1 <- 0.01
@@ -35,8 +17,8 @@ sim_grid <- expand.grid(
 #   alpha_min = 0.02, # set constraints on learning rates
 #   alpha_max = 0.98,
 #   gamma_mean = gvals,
-#   nu_mean = c(0.25, 0.5, 1, 1.5, 2, 2.5), # Keeping nu positive
-#   nu_sd = 0.3,
+#   nu_mean = seq(1, 5, by = 1), # Keeping nu positive
+#   nu_sd = 0.5,
 #   # nu_sd = 1,
 #   nu_min = 0.001,
 #   nu_max = 10,
@@ -45,16 +27,34 @@ sim_grid <- expand.grid(
 #   kappa_mean = kvals
 # )
 
+# smaller nu values
+sim_grid <- expand.grid(
+  model = model,
+  alpha_mean = seq(0.1, 0.9, by = 0.1), # increment 0.1 <- 0.01
+  alpha_sd = 0.1, # fixed for now
+  alpha_min = 0.02, # set constraints on learning rates
+  alpha_max = 0.98,
+  gamma_mean = gvals,
+  nu_mean = c(0.25, 0.5, 1, 1.5, 2, 2.5), # Keeping nu positive
+  nu_sd = 0.3,
+  # nu_sd = 1,
+  nu_min = 0.001,
+  nu_max = 10,
+  omega_mean = 0, #seq(-5, 5, by = 1), # increment by 1 #Zita: omega=seq(0, 5, by=1)
+  omega_sd = 1,
+  kappa_mean = kvals
+)
+
 # select data for testing
 # data_ind <- c(1:150, 1900:2050, 4057:4107)
-data_ind <- c(1:2700)
+data_ind <- c(1:3240) #CHECK
 
 # Preapre data for plotting
 
-sim_dir <- "/proj/mnhallqlab/projects/spott_modeling/par_sim_exp/fix_omega_kappa/"
+sim_dir <- "/proj/mnhallqlab/projects/spott_modeling/par_sim_exp/fix_omega_kappa_20/" #CHECK
 # data e.g., /proj/mnhallqlab/projects/spott_modeling/par_sim_exp/fix_omega_kappa/cond000001/stan_population_parameters_1.csv
   
-vba_out_dir <- "/proj/mnhallqlab/projects/spott_modeling/par_rec_exp/rec_fix_omega_kappa/outputs/vba_out/ffx/"
+vba_out_dir <- "/proj/mnhallqlab/projects/spott_modeling/par_rec_exp/rec_fix_omega_kappa_20/outputs/vba_out/ffx/" #CHECK
 # data e.g., /proj/mnhallqlab/projects/spott_modeling/par_rec_exp/rec_fix_omega_kappa/outputs/vba_out/ffx/cond000001/exp/cond000001_exp_ffx_global_statistics.csv
 
 # Local
