@@ -4,6 +4,8 @@ library(ggplot2)
 setwd("~/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling/data")
 load("ggDF.RData")
 
+ggDF$gamma_mean <- round(ggDF$gamma_mean, digits = 2)
+
 alphap <- ggplot(data = ggDF, aes(x = alpha, y = alpha_transformed, color=as.factor(kappa_mean))) +
   geom_point() +
   xlab(sprintf("Sim learning rate (alpha), r: %4.2f", cor(ggDF$alpha,ggDF$alpha_transformed))) + ylab("Est learning rate") +
