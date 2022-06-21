@@ -3,7 +3,7 @@
 
 library(dplyr)
 library(ggplot2)
-library(doMC)
+# library(doMC)
 library(doFuture)
 library(doRNG)
 library(foreach)
