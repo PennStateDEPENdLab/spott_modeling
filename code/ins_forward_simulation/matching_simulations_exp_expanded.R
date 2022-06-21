@@ -58,8 +58,8 @@ future::plan(
 # }
 
 res_combined <- foreach(
-  cond = iter(rw_prob, by = "row"), .options.future = list(chunk.size = chunk_size),
-  .export = c("grwalk", "n_trials")
+  cond = iter(rw_prob, by = "row"), .options.future = list(chunk.size = chunk_size)
+  #.export = c("grwalk", "n_trials")
 ) %dorng% {
   task_environment <- setup_task_environment(
     prew = list(
