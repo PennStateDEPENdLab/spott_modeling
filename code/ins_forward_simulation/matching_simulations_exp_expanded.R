@@ -59,8 +59,8 @@ future::plan(
 
 res_combined <- foreach(
   cond = iter(rw_prob, by = "row"), .options.future = list(chunk.size = chunk_size)
-  #.export = c("grwalk", "n_trials")
 ) %dorng% {
+  n_trials = 100
   task_environment <- setup_task_environment(
     prew = list(
       expression(grwalk(n_trials, start = cond$p1, 0, max_p=1, min_p=0)),
