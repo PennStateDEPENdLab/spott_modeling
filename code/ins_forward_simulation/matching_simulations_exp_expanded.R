@@ -17,15 +17,15 @@ setwd(repo_dir)
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
 
-out_dir <- "/nas/longleaf/home/maruofan/mnhallqlab/projects/spott_modeling/matching_exp"
+out_dir <- "/nas/longleaf/home/maruofan/mnhallqlab/projects/spott_modeling/matching_sim_exp"
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
 }
 
 # initial_params <- c(alpha=0.1, gamma=2, nu=0.5, omega=0, kappa = 4)
 
-# rw_prob <- expand.grid(p1 = seq(0.05, .95, .1), p2=seq(0.05, .95, .1))
-rw_prob <- expand.grid(kappas = seq(0.5, 8, by=0.5), p1 = seq(0.05, .15, .1), p2=seq(0.05, .15, .1))
+rw_prob <- expand.grid(kappas = seq(0.5, 8, by=0.5), p1 = seq(0.05, .95, .1), p2=seq(0.05, .95, .1))
+# rw_prob <- expand.grid(kappas = seq(0.5, 8, by=0.5), p1 = seq(0.05, .15, .1), p2=seq(0.05, .15, .1))
 rw_prob$cond_id <- 1:nrow(rw_prob)
 
 chunk_size <- 10
