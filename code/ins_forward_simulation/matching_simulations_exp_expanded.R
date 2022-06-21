@@ -12,12 +12,12 @@ library(iterators)
 
 # repo_dir <- "~/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
 # setwd(repo_dir)
-code_dir <- "/nas/longleaf/home/maruofan/GitHub/spott_modeling/code/ins_forward_simulation"
-setwd(code_dir)
+repo_dir <- "/nas/longleaf/home/maruofan/GitHub/spott_modeling/code/ins_forward_simulation"
+setwd(repo_dir)
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
 
-out_dir <- code_dir <- "/nas/longleaf/home/maruofan/GitHub/spott_modeling/code/ins_forward_simulation/matching_exp"
+out_dir <- "/nas/longleaf/home/maruofan/mnhallqlab/projects/spott_modeling/matching_exp"
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
 }
@@ -57,7 +57,7 @@ future::plan(
 #   )
 # }
 
-res <- foreach(
+res_combined <- foreach(
   cond = iter(rw_prob, by = "row"), .options.future = list(chunk.size = chunk_size)
 ) %dorng% {
   task_environment <- setup_task_environment(
@@ -75,7 +75,7 @@ res <- foreach(
   sdf <- xx$sum_df
   sdf$kappa <- cond$kappas
   
-  res_combined <- bind_rows(res)
+  res_combined <- bind_rows(sdf)
   write.csv(res_combined, file = file.path(out_dir, paste0("matching_sim_exp_", cond$cond_id, ".csv")), row.names=F)
   return(res_combined)
 }
