@@ -8,6 +8,7 @@ library(doFuture)
 library(doRNG)
 library(foreach)
 library(future.batchtools)
+library(iterators)
 
 # repo_dir <- "~/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
 # setwd(repo_dir)
