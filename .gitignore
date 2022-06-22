@@ -44,3 +44,5 @@ par_sim/
 
 # .out files from parameter recovery
 code/param_recovery/slurm-*
+
+data/ggDF.RData
