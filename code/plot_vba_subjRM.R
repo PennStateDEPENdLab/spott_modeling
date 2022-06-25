@@ -21,22 +21,30 @@ rm(list=ls(all=TRUE))
 # trial_stats <- read.csv("/Users/zzo1/Dropbox/GitLAb/spott_modeling/spott_modeling/outputs/vba_out/ffx/pandaa_vba_input/time2pl/pandaa_vba_input_time2pl_ffx_trial_outputs.csv")
 
 setwd("~/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling/outputs/vba_out/ffx/pandaa_vba_input/exp")
-trial_stats
+trial_stats <- read.csv("pandaa_vba_input_exp_ffx_trial_outputs.csv")
+group_stats <- read.csv("pandaa_vba_input_exp_ffx_global_statistics.csv")
 
 #single subj for 102 with correction on clairvoyance
 # s102 <- read.csv("/Users/mnh5174/Data_Analysis/spott_modeling/outputs/vba_out/ffx/suuvid_base/pandaa_suuvid_base_ffx_prompt_outputs_onesub.csv") %>% slice(1:1534) %>% filter(id==102) %>% mutate(sample=1:n(), time=sample*50/1000) %>%
 #   filter(sample > 100 & sample < 350)
 
-bothResults = read.csv("bothResults.csv")
-IDs = bothResults$results.id
-howManyP = 35
-adjHeight = 20*(howManyP/5)
+#RM
+# bothResults = read.csv("bothResults.csv") C-G are VBA results (analysis done on the transformed scale), rest are from stan
+# IDs = bothResults$id
+IDs <- group_stats$id
+# IDs <- unique(trial_stats$id)
+  
+howManyP = 5 #35 #65?
+adjHeight = 20*(howManyP/5) #height of pdf file, scaling with # of participants
 plist <- list()
 howLong = 1000
 for (ii in 1:howManyP){
-  
+
+# select data from trial_stats that correspond to ID = ii, then take the 101st to 999th trials    
 s102 <- trial_stats %>% filter(id==IDs[ii]) %>% mutate(sample=1:n(), time=sample*50/1000) %>%
      filter(sample > 100 & sample < howLong)
+
+
 q_df <- s102 %>% gather(key="Action_Value", value="Q", Q1, Q2)
 ggplot(q_df, aes(x=time, y=Q, color=Action_Value)) + geom_line()
 
@@ -67,13 +75,14 @@ cplot <- ggplot(choice_df, aes(x=time, y=option_num, ymin=option_num-0.1, ymax=o
 #plot_grid(qplot, cplot, ncol=1, align="h")
 
 pdf("firstFive.pdf", width=10, height=adjHeight)
-oneP = filter(bothResults, results.id == IDs[ii])
+oneP = filter(group_stats, id == IDs[ii])
 plist[[ii]] = cplot + xlab("Time (seconds)") + theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
-                                             axis.ticks.y = element_blank(), axis.line.y = element_blank())+
- ggtitle(sprintf("Stan/MATLAB VSens:%4.2f,%4.2f;baseV:%4.2f,%4.2f;Learning:%4.2f,%4.2f;Temp:%4.2f,%4.2f;Cost:Temp:%4.2f,%4.2f",oneP$vigorSensitivityMean,oneP$gamma_transformed,oneP$baseVigorMean,oneP$nu_transformed,oneP$alpha_transformed,oneP$learningRateMean,oneP$kappa_transformed,oneP$inverseTemperatureMean,oneP$omega_transformed,oneP$switchCostpenaltyMean))
+                                             axis.ticks.y = element_blank(), axis.line.y = element_blank()) +
+ ggtitle(sprintf("ID: %d MATLAB VSens:%4.2f;baseV:%4.2f;Learning:%4.2f;Temp:%4.2f;Cost:%4.2f",ii, oneP$gamma_transformed,oneP$nu_transformed,oneP$alpha_transformed,oneP$kappa_transformed,oneP$omega_transformed))
 }
 do.call(grid.arrange, c(plist, nrow = howManyP))
 dev.off()
 
 
+#Blue bars are predicted probability
 
