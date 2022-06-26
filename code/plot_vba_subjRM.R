@@ -36,7 +36,7 @@ group_stats <- read.csv("pandaa_vba_input_exp_ffx_global_statistics.csv")
 IDs <- group_stats$id
 # IDs <- unique(trial_stats$id)
   
-howManyP = 65 #35 #65?
+howManyP = 65 # RM: the content still got cut in the PDF
 adjHeight = 20*(howManyP/5) #height of pdf file, scaling with # of participants
 plist <- list()
 howLong = 1000
