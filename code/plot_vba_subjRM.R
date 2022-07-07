@@ -36,7 +36,7 @@ group_stats <- read.csv("pandaa_vba_input_exp_ffx_global_statistics.csv")
 IDs <- group_stats$id
 # IDs <- unique(trial_stats$id)
   
-howManyP = 65 # RM: the content still got cut in the PDF
+howManyP = 15 #65 # RM: the content still got cut in the PDF
 adjHeight = 20*(howManyP/5) #height of pdf file, scaling with # of participants
 plist <- list()
 howLong = 1000
@@ -46,10 +46,13 @@ for (ii in 1:howManyP){
 s102 <- trial_stats %>% filter(id==IDs[ii]) %>% mutate(sample=1:n(), time=sample*50/1000) %>%
      filter(sample > 100 & sample < howLong)
 
-# Writing Q1, Q2 in long form
+# gather(): Writing Q1, Q2 in long form
 # s102 has variables Q1 and Q2, with values
 # q_df has a variable "Action_Value" to indicate Q1 or Q2; variable Q is the values
 q_df <- s102 %>% gather(key="Action_Value", value="Q", Q1, Q2)
+# Note: pivor_longer() is an updated approach to gather()
+# https://tidyr.tidyverse.org/reference/pivot_longer.html#:~:text=pivot_longer()%20is%20an%20updated,no%20longer%20under%20active%20development.
+
 
 # Plot Q1 and Q2 values
 ggplot(q_df, aes(x=time, y=Q, color=Action_Value)) + geom_line()
@@ -84,7 +87,7 @@ cplot <- ggplot(choice_df, aes(x=time, y=option_num, ymin=option_num-0.1, ymax=o
 
 #plot_grid(qplot, cplot, ncol=1, align="h")
 
-pdf("vba_subj.pdf", width=10, height=adjHeight)
+pdf("vba_subj1-15.pdf", width=10, height=adjHeight)
 oneP = filter(group_stats, id == IDs[ii])
 plist[[ii]] = cplot + xlab("Time (seconds)") + theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
                                              axis.ticks.y = element_blank(), axis.line.y = element_blank()) +
