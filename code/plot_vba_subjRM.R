@@ -58,6 +58,7 @@ q_df <- s102 %>% gather(key="Action_Value", value="Q", Q1, Q2)
 ggplot(q_df, aes(x=time, y=Q, color=Action_Value)) + geom_line()
 
 # Plot the difference between Q1-Q2
+# First solid line on the plot, Q1-Q2, Q-learning curve
 ggplot(s102, aes(x=time, y=Q1-Q2)) + geom_line() + geom_hline(yintercept=0)
 
 # Scaling Q1, Q2, Q1-Q2, so they are plotted at the desired position/coordinates in the final plot

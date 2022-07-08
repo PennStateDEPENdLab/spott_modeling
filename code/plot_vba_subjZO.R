@@ -35,9 +35,9 @@ for (ii in 1:howManyP){
 s102 <- trial_stats %>% filter(id==IDs[ii]) %>% mutate(sample=1:n(), time=sample*50/1000) %>%
      filter(sample > 100 & sample < howLong)
 q_df <- s102 %>% gather(key="Action_Value", value="Q", Q1, Q2)
-ggplot(q_df, aes(x=time, y=Q, color=Action_Value)) + geom_line()
+ggplot(q_df, aes(x=time, y=Q, color=Action_Value)) + geom_line() 
 
-ggplot(s102, aes(x=time, y=Q1-Q2)) + geom_line() + geom_hline(yintercept=0)
+ggplot(s102, aes(x=time, y=Q1-Q2)) + geom_line() + geom_hline(yintercept=0) #first solid line on the plot, Q1-Q2, Q-learning curve (??)
 
 q_df <- s102 %>% mutate(q1_norm=0.3*Q1/max(Q1) + 1.6, q2_norm=0.3*Q2/max(Q2) + 3.2, qdiff=0.6*((Q1-Q2)/max(Q1-Q2)) + 4.6) %>%
   gather(key="Action_Value", value="Q", q1_norm, q2_norm, qdiff)
@@ -53,13 +53,13 @@ choice_df <- s102 %>% gather(key="option", value="chosen", y1, y2, none) %>%
 
 cplot <- ggplot(choice_df, aes(x=time, y=option_num, ymin=option_num-0.1, ymax=option_num+0.1)) + geom_linerange(size=0.5) +
   #geom_tile(aes(x=time, y=option_pred_num, alpha=chosen_pred), color="white", fill="blue", height=0.2) +
-  geom_tile(aes(x=time, y=option_pred_num, fill=chosen_pred, color=chosen_pred), height=0.2) +
+  geom_tile(aes(x=time, y=option_pred_num, fill=chosen_pred, color=chosen_pred), height=0.2) + 
   geom_line(data=q_df, aes(x=time, y=Q, group=Action_Value, alpha=NULL, ymin=NULL, ymax=NULL), show.legend = FALSE) +
   #scale_alpha_continuous("Model-\npredicted\nprobability", range=c(0.1,.95), breaks=c(0, 0.25, 0.5, 0.75, 1))
   #geom_tile(aes(x=time, y=option_pred_num, color=chosen_pred, fill=chosen_pred), height=0.2, interpolate=TRUE) + 
   #scale_color_viridis_c() + scale_fill_viridis_c()
   scale_fill_distiller("Model-\npredicted\nprobability", palette = "Blues") + scale_color_distiller("Model-\npredicted\nprobability", palette="Blues") +
-  geom_hline(yintercept=4.6, linetype="dashed")
+  geom_hline(yintercept=4.6, linetype="dashed") 
 
 #plot_grid(qplot, cplot, ncol=1, align="h")
 
@@ -68,9 +68,11 @@ oneP = filter(bothResults, results.id == IDs[ii])
 plist[[ii]] = cplot + xlab("Time (seconds)") + theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
                                              axis.ticks.y = element_blank(), axis.line.y = element_blank())+
  ggtitle(sprintf("Stan/MATLAB VSens:%4.2f,%4.2f;baseV:%4.2f,%4.2f;Learning:%4.2f,%4.2f;Temp:%4.2f,%4.2f;Cost:Temp:%4.2f,%4.2f",oneP$vigorSensitivityMean,oneP$gamma_transformed,oneP$baseVigorMean,oneP$nu_transformed,oneP$alpha_transformed,oneP$learningRateMean,oneP$kappa_transformed,oneP$inverseTemperatureMean,oneP$omega_transformed,oneP$switchCostpenaltyMean))
-}
+} # delete the 2nd Temp because it's repetitive/typo # Take out the stan related terms (i.e., one of the two numbers showing is stan results)
 do.call(grid.arrange, c(plist, nrow = howManyP))
 dev.off()
+
+
 
 
 
