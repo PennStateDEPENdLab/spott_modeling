@@ -4,9 +4,12 @@
 library(cowplot)
 library(tidyverse)
 library(gridExtra)
+library(dplyr)
+library(tidyr)
 
-# RM: what does this do?
+# RM QUESTION: what does this do?
 # https://www.rdocumentation.org/packages/grDevices/versions/3.6.2/topics/dev
+# https://www.math.ucla.edu/~anderson/rw1001/library/base/html/dev.html
 # graphics.off() shuts down all open graphics devices.
 graphics.off()
 rm(list=ls(all=TRUE))
@@ -36,10 +39,12 @@ group_stats <- read.csv("pandaa_vba_input_exp_ffx_global_statistics.csv")
 IDs <- group_stats$id
 # IDs <- unique(trial_stats$id)
   
-howManyP = 15 #65 # RM: the content still got cut in the PDF
+howManyP = 65 #65 # RM QUESTION: the content still got cut in the PDF
 adjHeight = 20*(howManyP/5) #height of pdf file, scaling with # of participants
 plist <- list()
 howLong = 1000
+
+pdf("vba_subj_all.pdf", width=10, height=adjHeight)
 for (ii in 1:howManyP){
 
 # select data from trial_stats that correspond to ID = ii, then take the 101st to 999th trials    
@@ -88,12 +93,16 @@ cplot <- ggplot(choice_df, aes(x=time, y=option_num, ymin=option_num-0.1, ymax=o
 
 #plot_grid(qplot, cplot, ncol=1, align="h")
 
-pdf("vba_subj1-15.pdf", width=10, height=adjHeight)
+#pdf("vba_subj_all.pdf", width=10, height=adjHeight)
 oneP = filter(group_stats, id == IDs[ii])
 plist[[ii]] = cplot + xlab("Time (seconds)") + theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
                                              axis.ticks.y = element_blank(), axis.line.y = element_blank()) +
  ggtitle(sprintf("ID: %d MATLAB VSens:%4.2f;baseV:%4.2f;Learning:%4.2f;Temp:%4.2f;Cost:%4.2f",ii, oneP$gamma_transformed,oneP$nu_transformed,oneP$alpha_transformed,oneP$kappa_transformed,oneP$omega_transformed))
 }
-do.call(grid.arrange, c(plist, nrow = howManyP))
+
+# 7/11: MNH recommeded wrap_plots from patchwork or plot_grid from cowplot as more versatile alternatives to grid.arrange
+do.call(grid.arrange, c(plist, nrow = howManyP)) 
+
 dev.off()
+
 
