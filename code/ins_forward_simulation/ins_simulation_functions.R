@@ -3,9 +3,11 @@
 # helper function to setup a task environment consisting of actions, reward probabilities,
 # trials, time duration of trials, and time bins
 setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200, trial_ms=6000, bin_ms=50) {
-  
   # prew <- lapply(prew, eval.parent, n=1) # evaluate all prew expressions
-  prew <- lapply(prew, eval, envir = parent.frame()) # RM for 6/21/22 edited from the line above so it runs within foreach()
+  # prew <- lapply(prew, eval, envir = parent.frame()) # RM for 6/21/22 edited from the line above so it runs within foreach()
+  # prew <- lapply(prew, eval, envir=parent.frame(n=2)) # RM: this still doesn't work
+  # prew <- lapply(prew, function(x) { browser()  }) 
+  prew <- lapply(prew, function(e_i, n_trials_inner) { eval(e_i)  }, n_trials_inner=n_trials) 
   lens <- sapply(prew, length)
   stopifnot(length(unique(lens)) == 1L)
   prew <- do.call(cbind, prew) #make into a matrix
