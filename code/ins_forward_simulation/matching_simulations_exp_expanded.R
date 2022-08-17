@@ -165,8 +165,8 @@ res_combined <- foreach(
 # 
 # cor.test(~n1_n2 + p1_p2, filter(sum_df, n1_n2 < 15))
 # 
-# cor_stuff <- res_combined %>% filter(log_p1_p2 > -1 & log_n1_n2 < 1.9) %>% group_by(kappa, replication) %>% summarize(vigor_value=cor(log_n1_n2, log_p1_p2))
-# g <- ggplot(cor_stuff, aes(x=kappa, y=vigor_value)) + #geom_boxplot() + 
+# cor_stuff_reversal <- res_combined_reversal %>% filter(log_p1_p2 > -1 & log_n1_n2 < 1.9) %>% group_by(kappa, replication) %>% summarize(vigor_value=cor(log_n1_n2, log_p1_p2))
+# g <- ggplot(cor_stuff_reversal, aes(x=kappa, y=vigor_value)) + #geom_boxplot() +
 #   stat_smooth(method="loess",se=FALSE, color="black") +
 #   stat_summary(fun.data = "mean_cl_boot", colour = "red", size = 1, fun.args=(conf.int=.99), geom="pointrange") +
 #   ylab("Log-linear association between log\nresponse ratio and log probability ratio") +
