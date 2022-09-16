@@ -232,7 +232,7 @@ myrollfunc <- function(vec, win=20) {
 }
 
 # return key summary statistics from run
-get_sim_stats <- function(ins_results, task_environment) {
+get_sim_stats <- function(ins_results, task_environment, get_rolling_stats = FALSE, make_trial_plot=FALSE) {
   require(dplyr)
   require(ggplot2)
   require(tidyr)
@@ -245,7 +245,11 @@ get_sim_stats <- function(ins_results, task_environment) {
   choices_df <- reshape2::melt(ins_results$choices, varnames=c("trial", "timestep"), value.name="choice")
   rewards_df <- reshape2::melt(ins_results$rewards, varnames=c("trial", "timestep"), value.name="outcome")
   
-  trial_plot <- ggplot(Q_df %>% filter(trial < 8), aes(x=timestep, y=value, color=action)) + geom_line() + facet_wrap(~trial, ncol=1)
+  if (isTRUE(make_trial_plot)) {
+    trial_plot <- ggplot(Q_df %>% filter(trial < 8), aes(x=timestep, y=value, color=action)) + geom_line() + facet_wrap(~trial, ncol=1)  
+  } else {
+    trial_plot <- NULL
+  }
   
   #Q_tba is Q values trials x timesteps x actions
   #choices_df: action 0 means no action, whereas 1 or 2 denote their respective actions
@@ -260,20 +264,22 @@ get_sim_stats <- function(ins_results, task_environment) {
            Q_sum=Q_1 + Q_2, 
            Q_ratio=if_else(Q_1 > 0 & Q_2 > 0, Q_1/Q_2, NA_real_),
            response=as.numeric(choice > 0),  #any response
-           reward=if_else(outcome=="reward", 1, 0, missing=0)) %>% #recode 1/0 for reward/omission and make NAs (no response) 0s
-    #group_by(trial) %>% #group by trial to get rolling mean to respect each trial
-    mutate(response_rate=myrollfunc(response), #a bin is 30 milliseconds, so this is responses per 450ms
-           reward_rate=myrollfunc(reward),
-           Q_1_roll=myrollfunc(Q_1), Q_2_roll=myrollfunc(Q_2),
-           n_1=myrollfunc(choice==1),
-           n_2=myrollfunc(choice==2),
-           n_1_pref=if_else(n_1 > 0 & n_2 > 0, n_1/n_2, NA_real_),
-           Q_sum_roll=myrollfunc(Q_sum), Q_ratio_roll=myrollfunc(Q_ratio)) %>% 
-    ungroup() %>%
-    mutate(resp_Q_y = case_when(choice==1 ~ Q_1_roll, choice==2 ~ Q_2_roll, TRUE ~ NA_real_))
+           reward=if_else(outcome=="reward", 1, 0, missing=0)) #recode 1/0 for reward/omission and make NAs (no response) 0s
   
-  #Q_ratio_roll, 
-  #response_rate, reward_rate
+  # rolling response rates, Q_1, etc. in a 30-bin window (this is slow, so off by default)
+  if (isTRUE(get_rolling_stats)) {
+    all_df <- all_df %>%
+      group_by(trial) %>% #group by trial to get rolling mean to respect each trial
+      mutate(response_rate=myrollfunc(response), #a bin is 30 milliseconds, so this is responses per 450ms
+             reward_rate=myrollfunc(reward),
+             Q_1_roll=myrollfunc(Q_1), Q_2_roll=myrollfunc(Q_2),
+             n_1=myrollfunc(choice==1),
+             n_2=myrollfunc(choice==2),
+             n_1_pref=if_else(n_1 > 0 & n_2 > 0, n_1/n_2, NA_real_),
+             Q_sum_roll=myrollfunc(Q_sum), Q_ratio_roll=myrollfunc(Q_ratio)) %>%
+      ungroup() %>%
+      mutate(resp_Q_y = case_when(choice==1 ~ Q_1_roll, choice==2 ~ Q_2_roll, TRUE ~ NA_real_))
+  }
   
   #N.B. These summaries are only written for the 2-choice case.
   sum_df <- all_df %>% group_by(trial) %>% 
