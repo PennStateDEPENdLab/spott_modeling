@@ -8,18 +8,16 @@
 # It should return a scalar result.
 
 # params <-  c(alpha=, gamma=, nu=, omega=, kappa=)
-# a <- 0.8
+# a_target <- 0.8
 
 distance_a <- function(params, ){
   nsubjects <- # This is the sample size that will go into the denominator of cost
-    
-  ## This is wrong. I think this is all done by the optim()
-  # Need a list of different combos of parameters
-  # For each combo
-  # (1) simulate data (with repetitions, i.e., multiple subjects) -- check ins_forward; there are already simulated data
-  # and (2) calculate a by lm
-  # 
-  cost <- 
+  a_target <- 0.8
+  
+  
+  
+  
+  cost <- (sum(a_est) - nsubjects * a_target)/nsubjects
 }
   
 
