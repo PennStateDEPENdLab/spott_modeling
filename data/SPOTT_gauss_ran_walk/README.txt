@@ -1,0 +1,1 @@
+This is data from a small behavior-only study, run in the Spring of 2019, in which participants completed a variant of the SPOTT instrumental phase. In this variant, the probability of reward for pressing a given button varied from trial to trial, in a Gaussian random walk. 
