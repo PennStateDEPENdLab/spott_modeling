@@ -19,7 +19,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     trial_ms = trial_ms, #6 seconds
     bin_ms = bin_ms, # ms
     n_timesteps = trial_ms/bin_ms,
-    model=model
+    model=model,
     schedule = schedule #VI: default is VR for variable ratio; can input VI for variable interval
   )
   
@@ -182,9 +182,15 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       }
       
       #harvest outcome if response is emitted
+      # This is for VR (commented out for VI)
+      # if (choices[i,j] != 0) {
+      #   rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
+      #   rt_last <- time_vec[j] #update the last response time
+      # }
+      
+      #VI: 
       if (choices[i,j] != 0) {
-        rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
-        rt_last <- time_vec[j] #update the last response time
+        
       }
       
       #evolve Q vector
