@@ -37,14 +37,16 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5)
     times <- seq(0, trial_ms, by = 50)/1000
     
-
+    x<- # x needs to be size times x ncol(prew); also check the rgamma function below (should the first parameter be trial_ms? or times?Thinking it should be times)
     for (k in ncol(prew)){
+      #PICK UP HERE: need to do something to accommodate multiple choice options; right now this only has reward schedule for one choice
+      # That is, what is the interval set up for the other chioces? May need to initialize the variable before the for loop 
+      x <- rgamma(trial_ms, rate=prew[k], shape = 4) #this is x_k, reward for choice k
+      
       i <- 1 # interval that's being sampled/used
       rewarded <- rep(NA, length(times))
       last_rew <- 0
       time_i <- x[i]
-      
-      x1 <- rgamma(trial_ms, rate=prew[1], shape = 4) #this is x_k, reward for choice k
       for (t in seq_along(times)) {
         if (task_environment$rand_p_respond[t] == 0) {
           rewarded[t] <- 0
@@ -62,7 +64,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
       }
       
     }
-    task_environment$rand_p_reward <- # put "rewarded" from above here
+    task_environment$rand_p_reward <- rewards # put "rewarded" from above here
   }
   
   return(task_environment)
