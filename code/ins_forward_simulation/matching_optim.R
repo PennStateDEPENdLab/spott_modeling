@@ -1,3 +1,6 @@
+# This script finds an the combination of exp parameters so that 
+# "a" calculated from matching is the closest to 0.8
+
 library(dplyr)
 library(ggplot2)
 
