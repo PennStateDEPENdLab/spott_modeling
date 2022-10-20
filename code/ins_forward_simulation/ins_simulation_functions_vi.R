@@ -29,8 +29,42 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
   # Need a unique RNG seed for each trial x timestep to make sure that sample() call in sticky softmax is
   # reproducible across iteration in optimization.
   task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
-  task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
-  task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  
+  if (schedule == "VR"){
+    task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  } else if (schedule == "VI"){ #for VI, rand_p_reward is "deterministic" following the VI set up
+    task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5)
+    times <- seq(0, trial_ms, by = 50)/1000
+    
+
+    for (k in ncol(prew)){
+      i <- 1 # interval that's being sampled/used
+      rewarded <- rep(NA, length(times))
+      last_rew <- 0
+      time_i <- x[i]
+      
+      x1 <- rgamma(trial_ms, rate=prew[1], shape = 4) #this is x_k, reward for choice k
+      for (t in seq_along(times)) {
+        if (task_environment$rand_p_respond[t] == 0) {
+          rewarded[t] <- 0
+        } else{
+          t_elapsed <- times[t] - last_rew
+          if (t_elapsed >= time_i) {
+            rewarded[t] <- 1
+            last_rew <- times[t]
+            i <- i+1
+            time_i <- x[i]
+          } else {
+            rewarded[t] <- 0
+          }
+        }
+      }
+      
+    }
+    task_environment$rand_p_reward <- # put "rewarded" from above here
+  }
+  
   return(task_environment)
   
 }
@@ -190,7 +224,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       
       #VI: 
       if (choices[i,j] != 0) {
-        
+        rewards[i,j] <- rand_p_reward[i,j]
       }
       
       #evolve Q vector
