@@ -38,33 +38,33 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     times <- seq(0, trial_ms, by = 50)/1000
     
     x<- matrix(rep(NA, length(times)*2), ncol = ncol(prew)) # x has size times x ncol(prew)
+    rewarded <- matrix(rep(NA, length(times)*2), ncol = ncol(prew))
     for (k in 1:ncol(prew)){
       #PICK UP HERE: need to do something to accommodate multiple choice options; right now this only has reward schedule for one choice
       # That is, what is the interval set up for the other chioces? May need to initialize the variable before the for loop 
       x[,k] <- rgamma(length(times), rate=prew[k], shape = 4) #this is x_k, reward for choice k
       
       i <- 1 # interval that's being sampled/used
-      rewarded <- rep(NA, length(times))
       last_rew <- 0
       time_i <- x[i,k]
       for (t in seq_along(times)) {
         if (task_environment$rand_p_respond[t] == 0) {
-          rewarded[t] <- 0
+          rewarded[t,k] <- 0
         } else{
           t_elapsed <- times[t] - last_rew
           if (t_elapsed >= time_i) {
-            rewarded[t] <- 1
+            rewarded[t,k] <- 1
             last_rew <- times[t]
             i <- i+1
             time_i <- x[i,k]
           } else {
-            rewarded[t] <- 0
+            rewarded[t,k] <- 0
           }
         }
       }
       
     }
-    task_environment$rand_p_reward <- rewards # put "rewarded" from above here
+    task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
   }
   
   return(task_environment)
