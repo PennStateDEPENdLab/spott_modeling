@@ -28,7 +28,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
   
   # Need a unique RNG seed for each trial x timestep to make sure that sample() call in sticky softmax is
   # reproducible across iteration in optimization.
-  task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  task_environment$rand_p_which <- with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   
   if (schedule == "VR"){
     task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
@@ -37,16 +37,16 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5)
     times <- seq(0, trial_ms, by = 50)/1000
     
-    x<- # x needs to be size times x ncol(prew); also check the rgamma function below (should the first parameter be trial_ms? or times?Thinking it should be times)
+    x<- matrix(rep(NA, length(times)*2), ncol = ncol(prew)) # x has size times x ncol(prew)
     for (k in ncol(prew)){
       #PICK UP HERE: need to do something to accommodate multiple choice options; right now this only has reward schedule for one choice
       # That is, what is the interval set up for the other chioces? May need to initialize the variable before the for loop 
-      x <- rgamma(trial_ms, rate=prew[k], shape = 4) #this is x_k, reward for choice k
+      x[,k] <- rgamma(length(times), rate=prew[k], shape = 4) #this is x_k, reward for choice k
       
       i <- 1 # interval that's being sampled/used
       rewarded <- rep(NA, length(times))
       last_rew <- 0
-      time_i <- x[i]
+      time_i <- x[i,k]
       for (t in seq_along(times)) {
         if (task_environment$rand_p_respond[t] == 0) {
           rewarded[t] <- 0
@@ -56,7 +56,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
             rewarded[t] <- 1
             last_rew <- times[t]
             i <- i+1
-            time_i <- x[i]
+            time_i <- x[i,k]
           } else {
             rewarded[t] <- 0
           }
