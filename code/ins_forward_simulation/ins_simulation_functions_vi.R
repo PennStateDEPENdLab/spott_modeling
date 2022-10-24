@@ -38,7 +38,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     times <- seq(0, trial_ms, by = 50)/1000
     
     x<- matrix(rep(NA, length(times)*2), ncol = ncol(prew)) # x has size times x ncol(prew)
-    for (k in ncol(prew)){
+    for (k in 1:ncol(prew)){
       #PICK UP HERE: need to do something to accommodate multiple choice options; right now this only has reward schedule for one choice
       # That is, what is the interval set up for the other chioces? May need to initialize the variable before the for loop 
       x[,k] <- rgamma(length(times), rate=prew[k], shape = 4) #this is x_k, reward for choice k
