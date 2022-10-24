@@ -34,14 +34,12 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
     task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   } else if (schedule == "VI"){ #for VI, rand_p_reward is "deterministic" following the VI set up
-    task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5)
     times <- seq(0, trial_ms, by = 50)/1000
+    task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5) #PICK UP: problem with using length(times) vs. n_timesteps
     
     x<- matrix(rep(NA, length(times)*2), ncol = ncol(prew)) # x has size times x ncol(prew)
     rewarded <- matrix(rep(NA, length(times)*2), ncol = ncol(prew))
     for (k in 1:ncol(prew)){
-      #PICK UP HERE: need to do something to accommodate multiple choice options; right now this only has reward schedule for one choice
-      # That is, what is the interval set up for the other chioces? May need to initialize the variable before the for loop 
       x[,k] <- rgamma(length(times), rate=prew[k], shape = 4) #this is x_k, reward for choice k
       
       i <- 1 # interval that's being sampled/used
@@ -226,7 +224,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       
       #VI: 
       if (choices[i,j] != 0) {
-        rewards[i,j] <- rand_p_reward[i,j]
+        rewards[i,j] <- rand_p_reward[i, active_action] #PICK UP: not sure whether this is right or not. Intuitively, it's [active_action, j], but that's out of bound
       }
       
       #evolve Q vector
