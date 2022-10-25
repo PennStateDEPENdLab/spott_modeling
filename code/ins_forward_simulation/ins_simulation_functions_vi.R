@@ -224,7 +224,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       
       #VI: 
       if (choices[i,j] != 0) {
-        rewards[i,j] <- rand_p_reward[i, active_action] #PICK UP: not sure whether this is right or not. Intuitively, it's [active_action, j], but that's out of bound
+        rewards[i,j] <- rand_p_reward[j, active_action]
       }
       
       #evolve Q vector
