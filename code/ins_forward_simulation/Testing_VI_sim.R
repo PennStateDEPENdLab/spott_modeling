@@ -1,4 +1,5 @@
 repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
+repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/code/ins_forward_simulation" #laptop
 setwd(repo_dir)
 
 
