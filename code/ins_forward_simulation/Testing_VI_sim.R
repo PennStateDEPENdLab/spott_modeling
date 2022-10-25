@@ -16,7 +16,7 @@ task_environment <- setup_task_environment(
 params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352)
 xx <- repeat_forward_simulation(params, task_environment, n=20) #default n is 100 replications
 res <- xx$sum_df
-res_combined <- bind_rows(res)
+# res_combined <- bind_rows(res)
 
 task_environment <- setup_task_environment(
   prew = list(
