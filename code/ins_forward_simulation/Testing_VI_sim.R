@@ -3,6 +3,7 @@ setwd(repo_dir)
 
 
 source("ins_simulation_functions_vi.R")
+source("ins_learning_choice_rules.R")
 
 task_environment <- setup_task_environment(
   prew = list(1.5, 3), #VI: use this as the input to rate in rgamma
