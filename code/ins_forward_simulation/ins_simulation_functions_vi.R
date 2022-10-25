@@ -235,6 +235,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       # }
       
       #VI: 
+      options(error=recover)
       if (choices[i,j] != 0) {
         rewards[i,j] <- rand_p_reward[j, active_action]
       }
@@ -365,31 +366,91 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
   all_df_outputs <- list()
   sum_df_outputs <- list()
   
-  for (i in 1:n) {
-    #regenerate outcomes matrix and GRWs
-    if (is.null(task_environment$prew)) {
-      message("Using default GRW task environment with initial p_rew = .5 and SD = .08")
-      task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+  if (task_environment$schedule == "VI"){
+    for (i in 1:n) {
+      if (is.null(task_environment$prew)) {
+        message("Using default VI where intervals are sampled from rgamma with shape parameters 1.5 qnd 3")
+        task_environment$prew <- list(1.5, 3)
+      }
+      
+      # get new random numbers
+      task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+      task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5))
+      # task_environment$rand_p_reward: 
+      x<- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
+      
+      times <- seq(0, trial_ms, by = 50)/1000
+      # rewarded will contain the reward of each interval for each choice; size n_timesteps x ncol(prew)
+      rewarded <- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
+      for (k in 1:ncol(prew)){
+        x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) # VI schedule for choice k
+        
+        i <- 1 # interval that's being sampled/used
+        last_rew <- 0 #last rewarded time
+        time_i <- x[i,k]
+        for (t in 1:task_environment$n_timesteps) { #what's happening during each time interval #if using length(times), should -1, because there are only length(times)-1 possible response intervals
+          if (task_environment$rand_p_respond[t] == 0) {
+            rewarded[t,k] <- 0
+          } else{
+            
+            # t+1 because, for e.g., response during the first interval 0-0.05 is recorded at the 2nd time point 0.05; that is, 0.05 time has elapsed since the start
+            t_elapsed <- times[t+1] - last_rew # max t is length(times)-1, so should be all within bounds
+            if (t_elapsed >= time_i) {
+              rewarded[t,k] <- 1
+              last_rew <- times[t+1]
+              i <- i+1
+              time_i <- x[i,k]
+            } else {
+              rewarded[t,k] <- 0
+            }
+          }
+        }
+        
+      }
+      task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
+    
+      
+      results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
+      summaries <- get_sim_stats(results, task_environment)
+      sum_df <- summaries$sum_df
+      all_df <- summaries$all_df
+      sum_df$replication <- i
+      all_df$replication <- i
+      all_df_outputs[[i]] <- all_df
+      sum_df_outputs[[i]] <- sum_df
     }
     
-    # get new random numbers for each replication dataset so that outcomes vary from one to the next
-    task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
-    task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
-    task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    all_df <- bind_rows(all_df_outputs)
+    sum_df <- bind_rows(sum_df_outputs)
+    return(list(all_df=all_df, sum_df=sum_df))
+  } else{
     
-    results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
-    summaries <- get_sim_stats(results, task_environment)
-    sum_df <- summaries$sum_df
-    all_df <- summaries$all_df
-    sum_df$replication <- i
-    all_df$replication <- i
-    all_df_outputs[[i]] <- all_df
-    sum_df_outputs[[i]] <- sum_df
+    for (i in 1:n) {
+      #regenerate outcomes matrix and GRWs
+      if (is.null(task_environment$prew)) {
+        message("Using default GRW task environment with initial p_rew = .5 and SD = .08")
+        task_environment$prew <- cbind(grwalk(task_environment$n_trials, start=0.5, 0.08), grwalk(task_environment$n_trials, start=0.5, 0.08))
+      }
+      
+      # get new random numbers for each replication dataset so that outcomes vary from one to the next
+      task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+      task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+      task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+      
+      results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
+      summaries <- get_sim_stats(results, task_environment)
+      sum_df <- summaries$sum_df
+      all_df <- summaries$all_df
+      sum_df$replication <- i
+      all_df$replication <- i
+      all_df_outputs[[i]] <- all_df
+      sum_df_outputs[[i]] <- sum_df
+    }
+    
+    all_df <- bind_rows(all_df_outputs)
+    sum_df <- bind_rows(sum_df_outputs)
+    return(list(all_df=all_df, sum_df=sum_df))
   }
-  
-  all_df <- bind_rows(all_df_outputs)
-  sum_df <- bind_rows(sum_df_outputs)
-  return(list(all_df=all_df, sum_df=sum_df))
 }
 
 
