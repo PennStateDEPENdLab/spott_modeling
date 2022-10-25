@@ -1,3 +1,6 @@
+repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
+setwd(repo_dir)
+
 
 source("ins_simulation_functions_vi.R")
 

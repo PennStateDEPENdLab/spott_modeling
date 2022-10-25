@@ -35,17 +35,17 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   } else if (schedule == "VI"){ #for VI, rand_p_reward is "deterministic" following the VI set up
     times <- seq(0, trial_ms, by = 50)/1000
-    task_environment$rand_p_respond <- rbinom(length(times), size = 1, prob=0.5) #PICK UP: problem with using length(times) vs. n_timesteps
+    task_environment$rand_p_respond <- rbinom(task_environment$n_timesteps, size = 1, prob=0.5) #??length(times) vs. n_timesteps?
     
-    x<- matrix(rep(NA, length(times)*2), ncol = ncol(prew)) # x has size times x ncol(prew)
-    rewarded <- matrix(rep(NA, length(times)*2), ncol = ncol(prew))
+    x<- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew)) # x has size times x ncol(prew)
+    rewarded <- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
     for (k in 1:ncol(prew)){
-      x[,k] <- rgamma(length(times), rate=prew[k], shape = 4) #this is x_k, reward for choice k
+      x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) #this is x_k, reward for choice k
       
       i <- 1 # interval that's being sampled/used
       last_rew <- 0
       time_i <- x[i,k]
-      for (t in seq_along(times)) {
+      for (t in 1:task_environment$n_timesteps) {
         if (task_environment$rand_p_respond[t] == 0) {
           rewarded[t,k] <- 0
         } else{
