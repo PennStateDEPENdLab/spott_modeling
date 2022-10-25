@@ -1,11 +1,10 @@
 library(dplyr)
 library(broom)
+library(H
 
 repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ran_walk/data" #Desktop
 repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ran_walk/data" #laptop
 setwd(repo_dir)
-insblock_001 <- read.csv("001_insblock.csv")
-insblock_002 <- read.csv("002_insblock.csv")
 
 data_files <- list.files(repo_dir)[grepl(".csv", data_files)]
 
