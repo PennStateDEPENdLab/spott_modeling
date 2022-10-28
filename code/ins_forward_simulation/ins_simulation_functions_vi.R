@@ -152,6 +152,7 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
   rand_p_reward <- task_environment$rand_p_reward #VI: not relevant
   rand_p_respond <- task_environment$rand_p_respond  
   n_timesteps <- task_environment$n_timesteps #I have confounded thinking between bins and timesteps...
+  schedule <- task_environment$schedule
   choices <- matrix(0, nrow=n_trials, ncol=n_timesteps)
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
   time_vec <- seq(0, trial_ms, by=bin_ms)
@@ -228,16 +229,13 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       }
       
       #harvest outcome if response is emitted
-      # This is for VR (commented out for VI)
-      # if (choices[i,j] != 0) {
-      #   rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
-      #   rt_last <- time_vec[j] #update the last response time
-      # }
-      
-      #VI: 
-      options(error=recover)
       if (choices[i,j] != 0) {
-        rewards[i,j] <- rand_p_reward[j, active_action]
+        if (schedule == "VI"){
+          rewards[i,j] <- rand_p_reward[j, active_action]
+        } else{ #VR
+          rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
+        }
+        rt_last <- time_vec[j] #update the last response time
       }
       
       #evolve Q vector
@@ -374,42 +372,13 @@ repeat_forward_simulation <- function(params, task_environment, n=100) {
       }
       
       # get new random numbers
-      task_environment$rand_p_which <-   with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
-      task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5))
-      # task_environment$rand_p_reward: 
-      x<- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
-      
-      times <- seq(0, trial_ms, by = 50)/1000
-      # rewarded will contain the reward of each interval for each choice; size n_timesteps x ncol(prew)
-      rewarded <- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
-      for (k in 1:ncol(prew)){
-        x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) # VI schedule for choice k
-        
-        i <- 1 # interval that's being sampled/used
-        last_rew <- 0 #last rewarded time
-        time_i <- x[i,k]
-        for (t in 1:task_environment$n_timesteps) { #what's happening during each time interval #if using length(times), should -1, because there are only length(times)-1 possible response intervals
-          if (task_environment$rand_p_respond[t] == 0) {
-            rewarded[t,k] <- 0
-          } else{
-            
-            # t+1 because, for e.g., response during the first interval 0-0.05 is recorded at the 2nd time point 0.05; that is, 0.05 time has elapsed since the start
-            t_elapsed <- times[t+1] - last_rew # max t is length(times)-1, so should be all within bounds
-            if (t_elapsed >= time_i) {
-              rewarded[t,k] <- 1
-              last_rew <- times[t+1]
-              i <- i+1
-              time_i <- x[i,k]
-            } else {
-              rewarded[t,k] <- 0
-            }
-          }
-        }
-        
-      }
-      task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
-    
-      
+      task_environment <- setup_task_environment(model = task_environment$model, 
+                                                 prew = task_environment$prew, 
+                                                 n_trials = task_environment$n_trials,
+                                                 task_environment$trial_ms,
+                                                 task_environment$bin_ms,
+                                                 schedule = "VI")
+
       results <- ins_wins(params, fixed=NULL, task_environment, optimize=FALSE)
       summaries <- get_sim_stats(results, task_environment)
       sum_df <- summaries$sum_df
