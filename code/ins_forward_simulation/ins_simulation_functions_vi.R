@@ -353,7 +353,7 @@ get_sim_stats <- function(ins_results, task_environment, get_rolling_stats = FAL
   
   if (task_environment$schedule == "VI") {
     
-    prew_df <- data.frame(choices = t(as.matrix(results$choices)), rewards = t(as.matrix(results$rewards))) %>% 
+    prew_df <- data.frame(choices = t(as.matrix(ins_results$choices)), rewards = t(as.matrix(ins_results$rewards))) %>% 
       summarize(p_1 = sum(rewards[choices==1]), p_2 = sum(rewards[choices==2])) %>%
       mutate(trial=1:n()) %>%
       mutate(p1_p2=p_1/p_2)

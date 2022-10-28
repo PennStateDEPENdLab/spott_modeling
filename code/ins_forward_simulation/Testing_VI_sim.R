@@ -7,7 +7,7 @@ source("ins_simulation_functions_vi.R")
 source("ins_learning_choice_rules.R")
 
 task_environment <- setup_task_environment(
-  prew = list(1.5, 3), #VI: use this as the input to rate in rgamma
+  prew = list(150, 300), #VI: use this as the input to rate in rgamma
   n_trials = 1,
   trial_ms=200*6000,
   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
@@ -19,6 +19,7 @@ xx <- repeat_forward_simulation(params, task_environment, n=20) #default n is 10
 res <- xx$sum_df
 # res_combined <- bind_rows(res)
 
+# VR: 
 task_environment <- setup_task_environment(
   prew = list(
     expression(grwalk(n_trials, start = 0.7, 0.08)),
