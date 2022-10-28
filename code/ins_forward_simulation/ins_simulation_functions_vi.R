@@ -351,8 +351,18 @@ get_sim_stats <- function(ins_results, task_environment, get_rolling_stats = FAL
     stopifnot(nrow(task_environment$prew) == task_environment$n_trials)
   }
   
-  prew_df <- data.frame(task_environment$prew) %>% setNames(paste0("p_", 1:n_actions)) %>% mutate(trial=1:n()) %>%
-    mutate(p1_p2=p_1/p_2)
+  if (task_environment$schedule == "VI") {
+    
+    prew_df <- data.frame(choices = t(as.matrix(results$choices)), rewards = t(as.matrix(results$rewards))) %>% 
+      summarize(p_1 = sum(rewards[choices==1]), p_2 = sum(rewards[choices==2])) %>%
+      mutate(trial=1:n()) %>%
+      mutate(p1_p2=p_1/p_2)
+    
+  } else {#VR
+    prew_df <- data.frame(task_environment$prew) %>% setNames(paste0("p_", 1:n_actions)) %>% mutate(trial=1:n()) %>%
+      mutate(p1_p2=p_1/p_2)
+
+  }
   
   sum_df <- sum_df %>% left_join(prew_df, by="trial") %>%
     mutate(log_n1_n2 = log(n1_n2), log_p1_p2=log(p1_p2))
