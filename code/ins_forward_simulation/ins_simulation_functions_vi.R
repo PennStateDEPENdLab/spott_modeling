@@ -38,7 +38,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     
     # Using n_timesteps here rather than length(times) because n_timesteps is the number of time intervals (in which a response can occur)
     # Transposed to match the dimension in VR: 1 trial x n_timesteps
-    task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) #??length(times) vs. n_timesteps?
+    task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) 
     
     # Initializing variables x and rewarded
     # x has size n_timesteps x ncol(prew); 
