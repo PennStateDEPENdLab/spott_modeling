@@ -150,7 +150,7 @@ res_omega <- foreach(i=seq_along(omegas)) %dopar% {
   return(sdf)
 }
 
-save(res_omega, file = "~/Documents/GitHub/spott_modeling/data/matching_sim_Nu.RData")
+save(res_omega, file = "~/Documents/GitHub/spott_modeling/data/matching_sim_Omega.RData")
 
 res_combined_omega <- bind_rows(res_omega)
 cor_stuff_omega <- res_combined_omega %>% group_by(omega, replication) %>% summarize(vigor_value=cor(avg_value, nresp))
@@ -170,3 +170,36 @@ g <- ggplot(log_lm_omega2, aes(x=omega, y=log_p1_p2)) +
   ggtitle("Change of a values as omega varies") +
   labs(subtitle="Other parameters were recovered from PANDAA: \n alpha=0.1259690, gamma=3.2626238, nu=0.5724897, kappa = 2.1928352")
 plot(g)
+
+
+# Investigating the quadratic shape a vs. omega plot ----------------------
+
+## Plotting p1/p2 by r1/r2 for different omega values (10/24/22 meeting)
+
+# not logged
+g <- ggplot(res_combined_omega, aes(x=n1_n2, y=p1_p2)) +
+  geom_point() +
+  facet_wrap(~omega, ncol = 3)
+
+# logged  
+g_log <- ggplot(res_combined_omega, aes(x=log_n1_n2, y=log_p1_p2)) +
+  geom_point() +
+  facet_wrap(~omega, ncol = 3)
+
+## Plotting a at combinations of kappa and omega (10/24/22 meeting)
+
+kappa_omega <- expand.grid(kappa = seq(1, 6, by = 1),
+                         omega = seq(-2, 5, by=0.5))
+
+res_kappa_omega <- foreach(i=1:nrow(kappa_omega )) %dopar% {
+  pars <- initial_params #$value
+  pars["kappa"] <- kappa_omega [i,1]
+  pars["omega"] <- kappa_omega [i,2]
+  xx <- repeat_forward_simulation(pars, task_environment) # default is n=100
+  sdf <- xx$sum_df
+  sdf$kappa <- kappa_omega [i,1]
+  sdf$omega <- kappa_omega [i,2]
+  return(sdf)
+}
+
+

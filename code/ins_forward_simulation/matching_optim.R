@@ -51,6 +51,7 @@ SimFit_a <- function(params, task_environment, a=a_target){
   
   cost <- sum((log_lm["a"]-a_target)^2)
   print(cost)
+  #if (is.infinite(cost)) {browser()}
   return(cost)
 }
   
@@ -77,4 +78,17 @@ optimizedParams <- optim(starting_vals, fn=SimFit_a, method="L-BFGS-B",
                         lower=lower_bounds, upper=upper_bounds,
                         control=list(parscale=relativeScale),
                         task_environment = task_environment, a=a_target)
+
+
+# Getting multiple optim results ------------------------------------------
+options(error = recover) 
+
+optimizedParams <- starting_vals
+for (i in 1:20){
+  new_optimizedParams <- optim(starting_vals, fn=SimFit_a, method="L-BFGS-B", 
+                 lower=lower_bounds, upper=upper_bounds,
+                 control=list(parscale=relativeScale),
+                 task_environment = task_environment, a=a_target)
+  optimizedParams <- rbind(optimizedParams, t(new_optimizedParams$par))
+}
 
