@@ -231,3 +231,9 @@ g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = kappa, y 
   geom_point(aes(color = omega)) +
   ylab("a")
 
+# plot a at different omega/kappa ratios; facets are omega values
+log_lm_KappaOmega <- log_lm_KappaOmega %>% mutate(omega_kappa = omega/kappa)
+g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = omega_kappa, y = estimate)) +
+  geom_point() +
+  ylab("a") +
+  facet_wrap(~omega, ncol = 3)
