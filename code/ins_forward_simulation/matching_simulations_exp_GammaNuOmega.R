@@ -202,4 +202,32 @@ res_kappa_omega <- foreach(i=1:nrow(kappa_omega )) %dopar% {
   return(sdf)
 }
 
+res_kappa_omega_combined <- bind_rows(res_kappa_omega)
+log_lm_KappaOmega <- res_kappa_omega_combined %>% filter(log_n1_n2 > -Inf & log_n1_n2 < Inf) %>% group_by(kappa, omega) %>% do({
+  df <- .
+  df <- df %>% select(log_n1_n2, log_p1_p2)
+  m <- lm(log_n1_n2 ~ log_p1_p2, df)
+  broom::tidy(m)
+}) %>% ungroup()
+
+# a values at different kappa-omega combinations
+g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = kappa, y = omega, color = estimate))+
+  geom_point()
+
+# a vs. omega at different kappa values
+g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = omega, y = estimate)) +
+  geom_point(aes(shape = as.factor(kappa))) +
+  ylab("a") 
+  #facet_wrap(~kappa, ncol = 2)
+
+# a vs. kappa at different omega values
+g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = kappa, y = estimate)) +
+  geom_point() +
+  ylab("a") + 
+  facet_wrap(~omega, ncol = 3)
+
+# Putting the facets in the plot above together
+g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = kappa, y = estimate)) +
+  geom_point(aes(color = omega)) +
+  ylab("a")
 
