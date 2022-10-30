@@ -5,7 +5,11 @@ repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ra
 repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ran_walk/data" #laptop
 setwd(repo_dir)
 
-data_files <- list.files(repo_dir)[grepl(".csv", data_files)]
+data_files <- list.files(repo_dir)
+data_files <- data_files[grepl(".csv", data_files)]
+
+
+# Find a for each participant ---------------------------------------------
 
 a_list <- rep(NA, length(data_files))
 i <- 1
@@ -26,4 +30,39 @@ for (file in data_files){
 }
 
 
+# For each participant, is the better option pressed more? ----------------
+
+pbest_coef_list <- rep(NA, length(data_files))
+prew_coef_list <- rep(NA, length(data_files))
+pbest2_coef_list <- rep(NA, length(data_files))
+i <- 1
+
+for (file in data_files){
+  insblock_temp <- read.csv(file)
+  
+  insblock_temp <- insblock_temp %>% 
+    group_by(instrial) %>% 
+    summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
+    mutate(n_best = ifelse(prewardA >= prewardB, respA, respB), p_best = ifelse(prewardA >= prewardB, prewardA, prewardB)) %>%
+    mutate(proportion_best = n_best/(respA+respB), nresp = respA+respB, p_total = prewardA + prewardB)
+  
+  pbest_coef<-lm(proportion_best ~ p_best, insblock_temp) %>% coefficients() # Do they choose the better option more as the reward probability increases?
+  pbest_coef <- pbest_coef[2]
+  pbest_coef_list[i] <- pbest_coef
+  
+  prew_coef<-lm(nresp ~ p_total, insblock_temp) %>% coefficients() # Do the press more when total reward probability increases?
+  prew_coef <- prew_coef[2]
+  prew_coef_list[i] <- prew_coef
+  
+  pbest2_coef <- lm(nresp ~ p_best, insblock_temp) %>% coefficients() # Do the press more when the better reward probability increases?
+  pbest2_coef <- pbest2_coef[2]
+  pbest2_coef_list[i] <- pbest2_coef
+  
+  i <- i+1
+}
+
+# length(data_files) is 23
+sum(pbest_coef_list >=0) #10
+sum(prew_coef_list >=0) #13
+sum(pbest2_coef_list >=0) #23
 

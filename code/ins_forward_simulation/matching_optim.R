@@ -84,7 +84,7 @@ optimizedParams <- optim(starting_vals, fn=SimFit_a, method="L-BFGS-B",
 options(error = recover) 
 
 optimizedParams <- starting_vals
-for (i in 1:20){
+for (i in 1:10){
   new_optimizedParams <- optim(starting_vals, fn=SimFit_a, method="L-BFGS-B", 
                  lower=lower_bounds, upper=upper_bounds,
                  control=list(parscale=relativeScale),
