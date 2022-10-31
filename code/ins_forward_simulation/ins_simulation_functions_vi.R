@@ -29,16 +29,17 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
   # Need a unique RNG seed for each trial x timestep to make sure that sample() call in sticky softmax is
   # reproducible across iteration in optimization.
   task_environment$rand_p_which <- with(task_environment, array(sample.int(n=n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+  task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   
   if (schedule == "VR"){
-    task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    #task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
     task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   } else if (schedule == "VI"){ #for VI, rand_p_reward is "deterministic" following the VI set up
     times <- seq(0, trial_ms, by = 50)/1000 #starting from 0, used to count time past from the last reward
     
     # Using n_timesteps here rather than length(times) because n_timesteps is the number of time intervals (in which a response can occur)
     # Transposed to match the dimension in VR: 1 trial x n_timesteps
-    task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) 
+    #task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) 
     
     # Initializing variables x and rewarded
     # x has size n_timesteps x ncol(prew); 
