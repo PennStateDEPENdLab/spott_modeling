@@ -19,6 +19,8 @@ xx <- repeat_forward_simulation(params, task_environment, n=20) #default n is 10
 res <- xx$sum_df
 # res_combined <- bind_rows(res)
 
+save(res, file ="/Users/maruofan/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+
 # VR: 
 task_environment <- setup_task_environment(
   prew = list(
