@@ -7,7 +7,7 @@ source("ins_simulation_functions_vi.R")
 source("ins_learning_choice_rules.R")
 
 task_environment <- setup_task_environment(
-  prew = list(15, 30), #VI: use this as the input to rate in rgamma
+  prew = list(150, 300), #VI: use this as the input to rate in rgamma
   n_trials = 1,
   trial_ms=200*6000,
   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
@@ -15,14 +15,18 @@ task_environment <- setup_task_environment(
 )
 
 params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352)
-xx_2 <- repeat_forward_simulation(params, task_environment, n=20) #default n is 100 replications
-res_2 <- xx_2$sum_df
+xx_4 <- repeat_forward_simulation(params, task_environment, n=20) #default n is 100 replications
+res_4 <- xx_4$sum_df
 # res_combined <- bind_rows(res)
 
+res_15_30 <- res
+res_15_30_2 <- res_2
+res_1.5_3 <- res_3
+save(res_15_30, res_15_30_2, res_1.5_3, file ="/Users/maruofan/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
 
-save(res, file ="/Users/ruofanma/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+load("/Users/maruofan/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
 
-summary(lm(log_n1_n2~log_p1_p2, res_2))
+summary(lm(log_n1_n2~log_p1_p2, res_3))
 
 all_df <- xx_2$all_df
 
