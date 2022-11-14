@@ -336,7 +336,7 @@ get_sim_stats <- function(ins_results, task_environment, get_rolling_stats = FAL
   
   #N.B. These summaries are only written for the 2-choice case.
   sum_df <- all_df %>% group_by(trial) %>% 
-    summarize(nresp=sum(choice > 0), avg_value=sum(Q_1, Q_2),
+    summarise(nresp=sum(choice > 0), avg_value=sum(Q_1, Q_2),
               n_1=sum(choice==1), n_2=sum(choice==2),
               Q_1=sum(Q_1), Q_2=sum(Q_2),
               Q1_Q2=sum(Q_1) / sum(Q_2),
