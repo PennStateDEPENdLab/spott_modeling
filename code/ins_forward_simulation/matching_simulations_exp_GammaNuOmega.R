@@ -212,7 +212,7 @@ log_lm_KappaOmega <- res_kappa_omega_combined %>% filter(log_n1_n2 > -Inf & log_
 
 # a values at different kappa-omega combinations
 g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = kappa, y = omega, color = estimate))+
-  geom_point()
+  geom_point() ## geom_tile()
 
 # a vs. omega at different kappa values
 g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = omega, y = estimate)) +

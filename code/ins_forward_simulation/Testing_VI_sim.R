@@ -7,7 +7,7 @@ source("ins_simulation_functions_vi.R")
 source("ins_learning_choice_rules.R")
 
 task_environment <- setup_task_environment(
-  prew = list(150, 300), #VI: use this as the input to rate in rgamma
+  prew = list(15, 30), #VI: use this as the input to rate in rgamma
   n_trials = 1,
   trial_ms=200*6000,
   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
@@ -15,11 +15,34 @@ task_environment <- setup_task_environment(
 )
 
 params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352)
-xx <- repeat_forward_simulation(params, task_environment, n=20) #default n is 100 replications
-res <- xx$sum_df
+xx_2 <- repeat_forward_simulation(params, task_environment, n=20) #default n is 100 replications
+res_2 <- xx_2$sum_df
 # res_combined <- bind_rows(res)
 
+
 save(res, file ="/Users/ruofanma/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+
+summary(lm(log_n1_n2~log_p1_p2, res_2))
+
+all_df <- xx_2$all_df
+
+df <- data.frame(task_environment$rand_p_reward, time_programmed = seq(0.05,task_environment$n_timesteps,0.05)*1000)
+df_1 <- df %>% filter(X1 == 1) %>% mutate(programmed_interval = (time_programmed - lag(time_programmed)))
+df_2 <- df %>% filter(X2 == 1) %>% mutate(programmed_interval = (time_programmed - lag(time_programmed)))
+
+choice_1 <- all_df %>% filter(choice ==1 & reward ==1) %>% group_by(replication) %>% mutate(reward_interval = (timestep - lag(timestep))*50) %>% mutate(programmed_interval = head(df_1$programmed_interval, tally(cur_data())))
+hist(choice_1$reward_interval)
+choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% mutate(reward_interval = (timestep - lag(timestep))*50) %>% mutate(programmed_interval = head(df_2$programmed_interval, tally(cur_data())))
+hist(choice_2$reward_interval)
+
+cor(na.omit(choice_1$reward_interval), na.omit(choice_1$programmed_interval))
+
+hist(choice_1$reward_interval)
+
+hist(rgamma(200*6000/50, 15, 4))
+
+
+
 
 # VR: 
 task_environment <- setup_task_environment(
