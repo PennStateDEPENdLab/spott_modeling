@@ -45,11 +45,11 @@ hist(choice_1$reward_interval)
 choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% mutate(reward_interval = (timestep - lag(timestep))*50) %>% mutate(programmed_interval = head(df_2$programmed_interval, tally(cur_data())))
 hist(choice_2$reward_interval)
 
-cor(na.omit(choice_1$reward_interval), na.omit(choice_1$programmed_interval))
-
-hist(choice_1$reward_interval)
-
-hist(rgamma(200*6000/50, 15, 4))
+# Correlations between "intervals between actual rewards" and "programmed min intervals between rewards)
+# The correlations seem quite low, not as expected
+# cor(na.omit(choice_1$reward_interval), na.omit(choice_1$programmed_interval))
+# hist(choice_1$reward_interval)
+# hist(rgamma(200*6000/50, 15, 4))
 
 
 
