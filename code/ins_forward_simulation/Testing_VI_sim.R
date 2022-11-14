@@ -28,12 +28,18 @@ load("/Users/maruofan/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData"
 
 summary(lm(log_n1_n2~log_p1_p2, res_3))
 
+# Pick one of the data set generated using prew = list(15, 30), because that now gives "a" close to 0.8
+# pending investigation in how the parameters (which go into rgamma()) affect a
 all_df <- xx_2$all_df
 
+# Get the programmed time stamps for rewards, for both choices.
+# Then calculate programmed_interval as the time interval that each reward has to wait, for both choices
 df <- data.frame(task_environment$rand_p_reward, time_programmed = seq(0.05,task_environment$n_timesteps,0.05)*1000)
 df_1 <- df %>% filter(X1 == 1) %>% mutate(programmed_interval = (time_programmed - lag(time_programmed)))
 df_2 <- df %>% filter(X2 == 1) %>% mutate(programmed_interval = (time_programmed - lag(time_programmed)))
 
+# For each choice, get the actual rewarded times (how long has it been since the last reward)
+# and put the programmed intervals on the side 
 choice_1 <- all_df %>% filter(choice ==1 & reward ==1) %>% group_by(replication) %>% mutate(reward_interval = (timestep - lag(timestep))*50) %>% mutate(programmed_interval = head(df_1$programmed_interval, tally(cur_data())))
 hist(choice_1$reward_interval)
 choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% mutate(reward_interval = (timestep - lag(timestep))*50) %>% mutate(programmed_interval = head(df_2$programmed_interval, tally(cur_data())))
