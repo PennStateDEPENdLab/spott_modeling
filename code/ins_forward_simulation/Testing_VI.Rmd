@@ -1,0 +1,132 @@
+---
+title: "VI simulation checks"
+date: "2022-11-17"
+output:
+  html_document:
+    code_folding: hide
+    df_print: kable
+    mathjax: default
+    number_sections: no
+    theme: spacelab
+    toc: yes
+    toc_depth: 2
+---
+
+<style type="text/css">
+body{ font-size: 18px; max-width: 1600px; margin: auto; padding: 1em; }
+code.r{ font-size: 20px; }
+p { padding-top: 8px; padding-bottom: 8px; }
+pre { font-size: 16px; }
+</style>
+
+```{r setup, include=FALSE}
+#repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
+repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/code/ins_forward_simulation" #laptop
+setwd(repo_dir)
+
+source("ins_simulation_functions_vi.R")
+source("ins_learning_choice_rules.R")
+
+#load("/Users/ruofanma/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+
+params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352)
+
+# task_environment <- setup_task_environment(
+#   prew = list(150, 300), #VI: use this as the input to rate in rgamma
+#   n_trials = 1,
+#   trial_ms=200*6000,
+#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+#   schedule = "VI"
+# )
+# task_environment_150_300 <- task_environment 
+# xx_150_300 <- repeat_forward_simulation(params, task_environment, n=20)
+# 
+# 
+# task_environment <- setup_task_environment(
+#   prew = list(15, 30), #VI: use this as the input to rate in rgamma
+#   n_trials = 1,
+#   trial_ms=200*6000,
+#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+#   schedule = "VI"
+# )
+# 
+# task_environment_15_30 <- task_environment 
+# xx_15_30 <- repeat_forward_simulation(params, task_environment, n=20)
+# 
+# 
+# 
+# task_environment <- setup_task_environment(
+#   prew = list(1.5, 3), #VI: use this as the input to rate in rgamma
+#   n_trials = 1,
+#   trial_ms=200*6000,
+#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+#   schedule = "VI"
+# )
+# task_environment_1f5_3 <- task_environment 
+# xx_1f5_3 <- repeat_forward_simulation(params, task_environment, n=20)
+# 
+# 
+# save(task_environment_150_300, xx_150_300, task_environment_15_30, xx_15_30, task_environment_1f5_3, xx_1f5_3, 
+#      file ="/Users/ruofanma/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+```
+
+```{r}
+coef <- vector()
+
+for (df in ls()[grepl("xx_", ls())]){ #"xx_15_30"   "xx_150_300" "xx_1f5_3"  
+  df_name <- df
+  df <- mget(df)
+  res <- df[[1]]$sum_df
+  coef <- rbind(coef, coef(lm(log_n1_n2~log_p1_p2, res)))
+}
+coef
+```
+
+```{r}
+  df <- ls()[grepl("xx_", ls())][1]
+  df_name <- df
+  df <- mget(df)
+  
+  all_df <- df[[1]]$all_df
+  
+  # Get the data that contains e.g., "_15_30", and starts with "task"
+  task_environment <- ls()[grepl(substr(df_name, 3, nchar(df_name)), ls())][startsWith(ls()[grepl(substr(df_name, 3, nchar(df_name)), ls())], "task")]
+  task_environment <- mget(task_environment)
+  
+  # Get the programmed time stamps for rewards, for both choices.
+  # Then calculate programmed_interval as the time interval that each reward has to wait, for both choices
+  df_rew <- data.frame(task_environment[[1]]$rand_p_reward, time_programmed = seq(0.05, task_environment[[1]]$n_timesteps*0.05)*1000)
+  df_1 <- df_rew %>% filter(X1 == 1) %>% mutate(programmed_interval = ifelse(is.na(lag(time_programmed)), time_programmed, 
+                                                                             ifelse(time_programmed>lag(time_programmed), time_programmed - lag(time_programmed),
+                                                                                    time_programmed)))
+  df_2 <- df_rew %>% filter(X2 == 1) %>% mutate(programmed_interval = ifelse(is.na(lag(time_programmed)), time_programmed, 
+                                                                             ifelse(time_programmed>lag(time_programmed), time_programmed - lag(time_programmed),
+                                                                                    time_programmed)))
+
+  # For each choice, get the actual rewarded times (how long has it been since the last reward)
+  # and put the programmed intervals on the side 
+  # 1 timestep = 50 ms 
+  choice_1 <- all_df %>% filter(choice ==1 & reward ==1) %>% group_by(replication) %>% 
+    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, 
+                                     (timestep - lag(timestep))*50)) %>% 
+    mutate(programmed_interval = head(df_1$programmed_interval, tally(cur_data())))
+  
+  # This doesn't even work because as programmed, there are only 877 rewards from the VI schedule; but in reality, rewards were delivered >877 times
+  # choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% 
+  #   mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, 
+  #                                    (timestep - lag(timestep))*50)) %>% 
+  #   mutate(programmed_interval = head(df_2$programmed_interval, tally(cur_data())))
+  
+  
+  head(choice_1,20)
+  # head(choice_2,20)
+  
+  # par(mfrow=c(2,2))
+  # hist(choice_1$reward_interval[choice_1$reward_interval<14000])
+  # hist(choice_1$programmed_interval)
+  # hist(choice_2$reward_interval[choice_2$reward_interval<15000])
+  # hist(choice_2$programmed_interval)
+  
+```
+
+
