@@ -66,8 +66,8 @@ task_environment_1f5_3 <- task_environment
 xx_1f5_3 <- repeat_forward_simulation(params, task_environment, n=20)
 # 
 # 
-# save(task_environment_150_300, xx_150_300, task_environment_15_30, xx_15_30, task_environment_1f5_3, xx_1f5_3, 
-#      file ="/Users/ruofanma/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
+save(task_environment_150_300, xx_150_300, task_environment_15_30, xx_15_30, task_environment_1f5_3, xx_1f5_3, 
+     file ="/Users/maruofan/Documents/GitHub/spott_modeling/data/Testing_VI_sim.RData")
 ```
 
 ```{r}
