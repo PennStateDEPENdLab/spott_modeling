@@ -1,5 +1,7 @@
 library(dplyr)
 library(broom)
+library(ggplot2)
+library(tidyr)
 
 repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ran_walk/data" #Desktop
 repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/data/SPOTT_gauss_ran_walk/data" #laptop
@@ -39,7 +41,6 @@ i <- 1
 
 for (file in data_files){
   insblock_temp <- read.csv(file)
-  
   insblock_temp <- insblock_temp %>% 
     group_by(instrial) %>% 
     summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
@@ -65,4 +66,75 @@ for (file in data_files){
 sum(pbest_coef_list >=0) #10
 sum(prew_coef_list >=0) #13
 sum(pbest2_coef_list >=0) #23
+
+
+
+# Visualizing -------------------------------------------------------------
+
+data <- read.csv(data_files[2])
+
+## Ploting prewardA vs. trial, or prewardB vs. trial
+## label is total # of press in the trial
+insblock_temp <- data # read.csv(file)
+insblock_temp <- insblock_temp %>% 
+  group_by(instrial) %>% 
+  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber)) %>%
+  mutate(total_prew = prewardA + prewardB)
+
+g <- ggplot(insblock_temp, aes(x=trial, y=total_prew, label=n_press)) + 
+  geom_text(position=position_dodge(width=0.5))
+
+plot(g)
+
+
+## Ploting prewardA and prewardB on the same plot, vs. trial
+## label is total # of press in the trial
+
+insblock_temp <- data # read.csv(file)
+insblock_temp <- insblock_temp %>% 
+  group_by(instrial) %>% 
+  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber)) %>%
+  mutate(total_prew = prewardA + prewardB) %>%
+  pivot_longer(cols = c("prewardA", "prewardB"), names_to = "response", values_to = "preward")
+
+g <- ggplot(insblock_temp, aes(x=trial, y=preward, label=n_press)) + 
+  geom_point(aes(color = response)) + 
+  geom_text(position=position_dodge(width=0.5))
+  
+plot(g)
+
+## Plotting the above but for all the participants
+
+df <- data.frame()
+for (file in data_files){
+  insblock_temp <- read.csv(file)
+  ID <- substring(file,1,3)
+  insblock_temp$ID <- ID
+  insblock_temp <- insblock_temp %>% 
+    group_by(instrial) %>% 
+    summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber), ID = unique(ID)) %>%
+    mutate(total_prew = prewardA + prewardB) %>%
+    pivot_longer(cols = c("prewardA", "prewardB"), names_to = "response", values_to = "preward")
+  
+  df <- rbind(df, insblock_temp)
+}
+
+g <- ggplot(df, aes(x=trial, y=preward, label=n_press)) + 
+  geom_point(aes(color = response)) + 
+  geom_text(position=position_dodge(width=0.5)) +
+  facet_wrap(~ID)
+
+plot(g)
+
+## plotting total reward (prewardA + prewardB)
+g <- ggplot(df, aes(x=trial, y=total_prew, label=n_press)) + 
+  geom_text(position=position_dodge(width=0.5)) +
+  facet_wrap(~ID)
+
+plot(g)
+                                                     
+#For total response scaling with total reward, ggplot(df, aes(x=p_total, y=n_resp)) + geom_point() + facet_wrap(~id)
+            
+                                                            
+                                                                
 

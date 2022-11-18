@@ -189,7 +189,7 @@ g_log <- ggplot(res_combined_omega, aes(x=log_n1_n2, y=log_p1_p2)) +
 ## Plotting a at combinations of kappa and omega (10/24/22 meeting)
 
 kappa_omega <- expand.grid(kappa = seq(1, 6, by = 1),
-                         omega = seq(-2, 5, by=0.5))
+                         omega = seq(0, 5, by=0.5))
 
 res_kappa_omega <- foreach(i=1:nrow(kappa_omega )) %dopar% {
   pars <- initial_params #$value
@@ -201,6 +201,8 @@ res_kappa_omega <- foreach(i=1:nrow(kappa_omega )) %dopar% {
   sdf$omega <- kappa_omega [i,2]
   return(sdf)
 }
+
+save(res_kappa_omega, file = "~/Documents/GitHub/spott_modeling/data/matching_sim_OmegaKappa.RData")
 
 res_kappa_omega_combined <- bind_rows(res_kappa_omega)
 log_lm_KappaOmega <- res_kappa_omega_combined %>% filter(log_n1_n2 > -Inf & log_n1_n2 < Inf) %>% group_by(kappa, omega) %>% do({
