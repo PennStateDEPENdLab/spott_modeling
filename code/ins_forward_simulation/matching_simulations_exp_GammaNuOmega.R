@@ -2,6 +2,7 @@
 
 library(dplyr)
 library(ggplot2)
+library(ggpmisc)
 library(tidyr)
 
 repo_dir <- "~/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
@@ -177,12 +178,12 @@ plot(g)
 ## Plotting p1/p2 by r1/r2 for different omega values (10/24/22 meeting)
 
 # not logged
-g <- ggplot(res_combined_omega, aes(x=n1_n2, y=p1_p2)) +
+g <- ggplot(res_combined_omega, aes(y=p1_p2, x=n1_n2)) +
   geom_point() +
   facet_wrap(~omega, ncol = 3)
 
 # logged  
-g_log <- ggplot(res_combined_omega, aes(x=log_n1_n2, y=log_p1_p2)) +
+g_log <- ggplot(res_combined_omega, aes(x=y=log_p1_p2, log_n1_n2)) +
   geom_point() +
   facet_wrap(~omega, ncol = 3)
 
@@ -239,3 +240,12 @@ g <- ggplot(log_lm_KappaOmega %>% filter(term == "log_p1_p2"), aes(x = omega_kap
   geom_point() +
   ylab("a") +
   facet_wrap(~omega, ncol = 3)
+
+# plot log_n1_n2 vs. log_p1_p2 along different combinations of kappa/omega
+g_log2 <- ggplot(res_kappa_omega_combined, aes(x=log_p1_p2, y=log_n1_n2)) +
+  stat_poly_line()+
+  geom_point(alpha = 0.1) +
+  stat_poly_eq(aes(label = after_stat(eq.label))) +
+  facet_grid(kappa~omega)
+
+plot(g_log2)
