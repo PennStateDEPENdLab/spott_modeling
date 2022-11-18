@@ -57,7 +57,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
       last_rew <- 0 #last rewarded time
       time_i <- x[i,k]
       for (t in 1:task_environment$n_timesteps) { #what's happening during each time interval #if using length(times), should -1, because there are only length(times)-1 possible response intervals
-        if (task_environment$rand_p_respond[t] == 0) {
+        if (task_environment$rand_p_respond[t] == 0) { #This is not happening after changing rand_p_respond to be a random probability between 0 and 1
           rewarded[t,k] <- 0
         } else{
           
@@ -76,6 +76,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
       
     }
     task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
+    task_environment$programmed_VI <- x
   }
   
   return(task_environment)

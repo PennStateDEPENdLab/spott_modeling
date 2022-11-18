@@ -20,8 +20,8 @@ pre { font-size: 16px; }
 </style>
 
 ```{r setup, include=FALSE}
-#repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
-repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/code/ins_forward_simulation" #laptop
+repo_dir <- "/Users/maruofan/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
+#repo_dir <- "/Users/ruofanma/Documents/GitHub/spott_modeling/code/ins_forward_simulation" #laptop
 setwd(repo_dir)
 
 source("ins_simulation_functions_vi.R")
@@ -31,39 +31,39 @@ source("ins_learning_choice_rules.R")
 
 params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352)
 
-# task_environment <- setup_task_environment(
-#   prew = list(150, 300), #VI: use this as the input to rate in rgamma
-#   n_trials = 1,
-#   trial_ms=200*6000,
-#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
-#   schedule = "VI"
-# )
-# task_environment_150_300 <- task_environment 
-# xx_150_300 <- repeat_forward_simulation(params, task_environment, n=20)
-# 
-# 
-# task_environment <- setup_task_environment(
-#   prew = list(15, 30), #VI: use this as the input to rate in rgamma
-#   n_trials = 1,
-#   trial_ms=200*6000,
-#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
-#   schedule = "VI"
-# )
-# 
-# task_environment_15_30 <- task_environment 
-# xx_15_30 <- repeat_forward_simulation(params, task_environment, n=20)
-# 
-# 
-# 
-# task_environment <- setup_task_environment(
-#   prew = list(1.5, 3), #VI: use this as the input to rate in rgamma
-#   n_trials = 1,
-#   trial_ms=200*6000,
-#   model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
-#   schedule = "VI"
-# )
-# task_environment_1f5_3 <- task_environment 
-# xx_1f5_3 <- repeat_forward_simulation(params, task_environment, n=20)
+task_environment <- setup_task_environment(
+  prew = list(150, 300), #VI: use this as the input to rate in rgamma
+  n_trials = 1,
+  trial_ms=200*6000,
+  model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+  schedule = "VI"
+)
+task_environment_150_300 <- task_environment
+xx_150_300 <- repeat_forward_simulation(params, task_environment, n=20)
+
+
+task_environment <- setup_task_environment(
+  prew = list(15, 30), #VI: use this as the input to rate in rgamma
+  n_trials = 1,
+  trial_ms=200*6000,
+  model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+  schedule = "VI"
+)
+
+task_environment_15_30 <- task_environment
+xx_15_30 <- repeat_forward_simulation(params, task_environment, n=20)
+
+
+
+task_environment <- setup_task_environment(
+  prew = list(1.5, 3), #VI: use this as the input to rate in rgamma
+  n_trials = 1,
+  trial_ms=200*6000,
+  model = "exp", #model # note that the $model element can be edited and then passed back into a simulation function
+  schedule = "VI"
+)
+task_environment_1f5_3 <- task_environment
+xx_1f5_3 <- repeat_forward_simulation(params, task_environment, n=20)
 # 
 # 
 # save(task_environment_150_300, xx_150_300, task_environment_15_30, xx_15_30, task_environment_1f5_3, xx_1f5_3, 
@@ -80,6 +80,26 @@ for (df in ls()[grepl("xx_", ls())]){ #"xx_15_30"   "xx_150_300" "xx_1f5_3"
   coef <- rbind(coef, coef(lm(log_n1_n2~log_p1_p2, res)))
 }
 coef
+```
+
+```{r}
+  df <- ls()[grepl("xx_", ls())][1]
+  df_name <- df
+  df <- mget(df)
+  
+  all_df <- df[[1]]$all_df
+  
+  # Get the data that contains e.g., "_15_30", and starts with "task"
+  task_environment <- ls()[grepl(substr(df_name, 3, nchar(df_name)), ls())][startsWith(ls()[grepl(substr(df_name, 3, nchar(df_name)), ls())], "task")]
+  task_environment <- mget(task_environment)
+  
+  choice_1 <- all_df %>% filter(choice ==1 & reward ==1) %>% group_by(replication) %>% 
+    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, (timestep - lag(timestep))*50)) %>% 
+    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,1])/0.05, tally(cur_data())))
+  
+  choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% 
+    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, (timestep - lag(timestep))*50)) %>% 
+    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,2])/0.05, tally(cur_data())))
 ```
 
 ```{r}
