@@ -60,9 +60,9 @@ SimFit_a <- function(params, task_environment, a=a_target){
 
 # initial_params <- c(alpha=0.1, gamma=2, nu=0.5, omega=0, kappa = 2) # taken from previous simulations
 # PANDAA_params <- c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352) # recovered from PANDAA using VBA
-starting_vals <- c(alpha=0.1, gamma=2, nu=0.5, omega=0, kappa = 2)
+starting_vals <- c(alpha=0.1, gamma=2, nu=0.5, omega=0.5, kappa = 2)
 
-lower_bounds <- c(alpha=0.05, gamma=0.05, nu=0.2, omega=-5, kappa=1)
+lower_bounds <- c(alpha=0.05, gamma=0.05, nu=0.2, omega=0.5, kappa=1)
 upper_bounds <- c(alpha=0.9, gamma=10, nu=2.5, omega=5, kappa=6)
   
 relativeScale <- c(alpha=0.1, gamma=0.5, nu=0.1, omega=0.5, kappa=1)
