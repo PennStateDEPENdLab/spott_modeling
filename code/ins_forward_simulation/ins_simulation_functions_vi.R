@@ -226,8 +226,8 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
           # new action chosen
           active_action <- c_ij
         }
-        
-        choices[i,j] <- active_action #choose the current action
+        ## QUESTION RM: what does this active_action do if no response is emitted?
+        choices[i,j] <- active_action #choose the current action 
       }
       
       #harvest outcome if response is emitted
