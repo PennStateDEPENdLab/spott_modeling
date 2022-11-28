@@ -226,7 +226,9 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
           # new action chosen
           active_action <- c_ij
         }
-        ## QUESTION RM: what does this active_action do if no response is emitted?
+        
+        # "choices" was initialized as 0's, so no response emitted means choices[i,j] stays at 0, 
+        # and current active action stays unchanged for the next time step
         choices[i,j] <- active_action #choose the current action 
       }
       
