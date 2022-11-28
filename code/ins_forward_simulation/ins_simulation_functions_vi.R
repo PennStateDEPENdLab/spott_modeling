@@ -33,51 +33,59 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
   
   if (schedule == "VR"){
     #task_environment$rand_p_respond <- with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
+    task_environment$programmed_VI <- "NA"
     task_environment$rand_p_reward <-  with(task_environment, array(runif(n_trials*n_timesteps), dim=c(n_trials, n_timesteps)))
   } else if (schedule == "VI"){ #for VI, rand_p_reward is "deterministic" following the VI set up
-    times <- seq(0, trial_ms, by = 50)/1000 #starting from 0, used to count time past from the last reward
-    
-    # Using n_timesteps here rather than length(times) because n_timesteps is the number of time intervals (in which a response can occur)
-    # Transposed to match the dimension in VR: 1 trial x n_timesteps
-    #task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) 
-    
-    # Initializing variables x and rewarded
-    # x has size n_timesteps x ncol(prew); 
-    # programmed intervals (for VI) to be waited before the next reward; max # needed is n_timesteps (i.e., max # of responses possible)
-    # Though it seems like using length(times) vs. n_timesteps won't make a difference because we look at each interval at a time point
-    # E.g., Responses during 0-0.05 interval is marked as occuring at time 0.05
     x<- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
-    
-    # rewarded will contain the reward of each interval for each choice; size n_timesteps x ncol(prew)
-    rewarded <- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
     for (k in 1:ncol(prew)){
       x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) # VI schedule for choice k
-      
-      i <- 1 # interval that's being sampled/used
-      last_rew <- 0 #last rewarded time
-      time_i <- x[i,k]
-      for (t in 1:task_environment$n_timesteps) { #what's happening during each time interval #if using length(times), should -1, because there are only length(times)-1 possible response intervals
-        if (task_environment$rand_p_respond[t] == 0) { #This is not happening after changing rand_p_respond to be a random probability between 0 and 1
-          rewarded[t,k] <- 0
-        } else{
-          
-          # t+1 because, for e.g., response during the first interval 0-0.05 is recorded at the 2nd time point 0.05; that is, 0.05 time has elapsed since the start
-          t_elapsed <- times[t+1] - last_rew # max t is length(times)-1, so should be all within bounds
-          if (t_elapsed >= time_i) {
-            rewarded[t,k] <- 1
-            last_rew <- times[t+1]
-            i <- i+1
-            time_i <- x[i,k]
-          } else {
-            rewarded[t,k] <- 0
-          }
-        }
-      }
-      
     }
-    task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
     task_environment$programmed_VI <- x
+    task_environment$rand_p_reward <- "NA"
   }
+  #   times <- seq(0, trial_ms, by = 50)/1000 #starting from 0, used to count time past from the last reward
+  #   
+  #   # Using n_timesteps here rather than length(times) because n_timesteps is the number of time intervals (in which a response can occur)
+  #   # Transposed to match the dimension in VR: 1 trial x n_timesteps
+  #   #task_environment$rand_p_respond <- t(rbinom(task_environment$n_timesteps, size = 1, prob=0.5)) 
+  #   
+  #   # Initializing variables x and rewarded
+  #   # x has size n_timesteps x ncol(prew); 
+  #   # programmed intervals (for VI) to be waited before the next reward; max # needed is n_timesteps (i.e., max # of responses possible)
+  #   # Though it seems like using length(times) vs. n_timesteps won't make a difference because we look at each interval at a time point
+  #   # E.g., Responses during 0-0.05 interval is marked as occuring at time 0.05
+  #   x<- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
+  #   
+  #   # rewarded will contain the reward of each interval for each choice; size n_timesteps x ncol(prew)
+  #   rewarded <- matrix(rep(NA, task_environment$n_timesteps*2), ncol = ncol(prew))
+  #   for (k in 1:ncol(prew)){
+  #     x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) # VI schedule for choice k
+  #     
+  #     i <- 1 # interval that's being sampled/used
+  #     last_rew <- 0 #last rewarded time
+  #     time_i <- x[i,k]
+  #     for (t in 1:task_environment$n_timesteps) { #what's happening during each time interval #if using length(times), should -1, because there are only length(times)-1 possible response intervals
+  #       if (task_environment$rand_p_respond[t] == 0) { #This is not happening after changing rand_p_respond to be a random probability between 0 and 1
+  #         rewarded[t,k] <- 0
+  #       } else{
+  #         
+  #         # t+1 because, for e.g., response during the first interval 0-0.05 is recorded at the 2nd time point 0.05; that is, 0.05 time has elapsed since the start
+  #         t_elapsed <- times[t+1] - last_rew # max t is length(times)-1, so should be all within bounds
+  #         if (t_elapsed >= time_i) {
+  #           rewarded[t,k] <- 1
+  #           last_rew <- times[t+1]
+  #           i <- i+1
+  #           time_i <- x[i,k]
+  #         } else {
+  #           rewarded[t,k] <- 0
+  #         }
+  #       }
+  #     }
+  #     
+  #   }
+  #   task_environment$rand_p_reward <- rewarded # For "VI," this is not a probability, but using this name for now
+  #   task_environment$programmed_VI <- x
+  # }
   
   return(task_environment)
   
@@ -145,19 +153,21 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
   model <- task_environment$model
   checkmate::assert_string(model, null.ok = FALSE)
   
-  prew <- task_environment$prew #VI: not relevant
+  prew <- task_environment$prew #VI: used as input parameters to rgamma, which generates programmed_VI
   n_trials <- task_environment$n_trials #VI: default to 1
   trial_ms <- task_environment$trial_ms #VI: default to 200*6000
   bin_ms <- task_environment$bin_ms
   outcomes <- task_environment$outcomes
   rand_p_which <- task_environment$rand_p_which
-  rand_p_reward <- task_environment$rand_p_reward #VI: not relevant
+  rand_p_reward <- task_environment$rand_p_reward #VI: "NA"; not relevant
   rand_p_respond <- task_environment$rand_p_respond  
   n_timesteps <- task_environment$n_timesteps #I have confounded thinking between bins and timesteps...
   schedule <- task_environment$schedule
+  programmed_VI <- task_environment$programmed_VI #VR: "NA"
   choices <- matrix(0, nrow=n_trials, ncol=n_timesteps)
   rewards <- matrix(NA_real_, nrow=n_trials, ncol=n_timesteps)
   time_vec <- seq(0, trial_ms, by=bin_ms)
+  
   
   if (model == "nonu" && params["nu"] != 0) {
     warning("nonu model has non-zero nu")
