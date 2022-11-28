@@ -40,7 +40,7 @@ setup_task_environment <- function(model=NULL, prew=list(0.3, 0.3), n_trials=200
     for (k in 1:ncol(prew)){
       x[,k] <- rgamma(task_environment$n_timesteps, rate=prew[k], shape = 4) # VI schedule for choice k
     }
-    task_environment$programmed_VI <- x
+    task_environment$programmed_VI <- x*1000
     task_environment$rand_p_reward <- "NA"
   }
   #   times <- seq(0, trial_ms, by = 50)/1000 #starting from 0, used to count time past from the last reward
@@ -223,6 +223,8 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
   #loop over trials and timesteps
   for (i in 1:n_trials) {
     rt_last <- 0 #reset trial start
+    last_rew <- 0 #last rewarded time #VI
+    active_VI_interval <- rep(1,max(all_choices)) #starting the programmed VI at the first interval
     for (j in 1:n_timesteps) {
       emit_response <- loc_presp(Q_tba[i,j,], tau = time_vec[j], rt_last = rt_last)
       
@@ -244,10 +246,23 @@ ins_wins <- function(params, fixed=NULL, task_environment=NULL, optimize=TRUE, p
       
       #harvest outcome if response is emitted
       if (choices[i,j] != 0) {
-        if (schedule == "VI"){
-          rewards[i,j] <- rand_p_reward[j, active_action]
-        } else{ #VR
+        if (schedule == "VR"){
           rewards[i,j] <- as.numeric(rand_p_reward[i,j] < prew[i,active_action]) #harvest reward on action
+        } else{ #VI
+          #rewards[i,j] <- rand_p_reward[j, active_action]
+          # RM QUESTION: Is this right? or do we count response during 0-0.05 as responding at time 0?
+          #             Also, do they get a reward when the press right away? or do they need to wait for the first interval before getting the first reward?
+          # j+1 because, for e.g., response during the first interval 0-0.05 is recorded at the 2nd time point 0.05; that is, 0.05 time has elapsed since the start
+          t_elapsed <- time_vec[j+1] - last_rew
+          wait_time <- programmed_VI[active_VI_interval[active_action], active_action]
+          if (t_elapsed >= wait_time) {
+            rewards[i,j] <- 1
+            last_rew <- time_vec[j+1]
+            active_VI_interval[active_action] <- active_VI_interval[active_action] + 1
+          } else {
+            rewards[i,j] <- 0
+          }
+          
         }
         rt_last <- time_vec[j] #update the last response time
       }
