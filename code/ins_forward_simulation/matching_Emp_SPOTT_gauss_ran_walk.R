@@ -78,7 +78,9 @@ data <- read.csv(data_files[2])
 insblock_temp <- data # read.csv(file)
 insblock_temp <- insblock_temp %>% 
   group_by(instrial) %>% 
-  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber)) %>%
+  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), 
+            trial = unique(instrial), n_press = max(eventNumber), 
+            respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
   mutate(total_prew = prewardA + prewardB)
 
 g <- ggplot(insblock_temp, aes(x=trial, y=total_prew, label=n_press)) + 
@@ -93,7 +95,9 @@ plot(g)
 insblock_temp <- data # read.csv(file)
 insblock_temp <- insblock_temp %>% 
   group_by(instrial) %>% 
-  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber)) %>%
+  summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), 
+            trial = unique(instrial), n_press = max(eventNumber), 
+            respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
   mutate(total_prew = prewardA + prewardB) %>%
   pivot_longer(cols = c("prewardA", "prewardB"), names_to = "response", values_to = "preward")
 
