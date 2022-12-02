@@ -86,7 +86,7 @@ coef
 ```
 
 ```{r}
-  df <- ls()[grepl("xx_", ls())][1]
+  df <- ls()[grepl("xx_", ls())][3]
   df_name <- df
   df <- mget(df)
   
@@ -97,16 +97,16 @@ coef
   task_environment <- mget(task_environment)
   
   choice_1 <- all_df %>% filter(choice ==1 & reward ==1) %>% group_by(replication) %>% 
-    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, (timestep - lag(timestep))*50)) %>% 
-    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,1])/0.05, tally(cur_data())))
+    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep*50, (timestep - lag(timestep))*50)) %>% 
+    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,1]), tally(cur_data())))
   
   choice_2 <- all_df %>% filter(choice ==2 & reward ==1) %>% group_by(replication) %>% 
-    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep, (timestep - lag(timestep))*50)) %>% 
-    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,2])/0.05, tally(cur_data())))
+    mutate(reward_interval = ifelse(is.na(lag(timestep)), timestep*50, (timestep - lag(timestep))*50)) %>% 
+    mutate(programmed_interval = head((task_environment[[1]]$programmed_VI[,2]), tally(cur_data())))
 ```
 
 ```{r}
-  df <- ls()[grepl("xx_", ls())][1]
+  df <- ls()[grepl("xx_", ls())][3]
   df_name <- df
   df <- mget(df)
   
