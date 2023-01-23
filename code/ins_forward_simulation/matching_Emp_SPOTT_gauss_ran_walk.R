@@ -116,7 +116,9 @@ for (file in data_files){
   insblock_temp$ID <- ID
   insblock_temp <- insblock_temp %>% 
     group_by(instrial) %>% 
-    summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), trial = unique(instrial), n_press = max(eventNumber), ID = unique(ID)) %>%
+    summarize(prewardA = unique(prewardA), prewardB = unique(prewardB), 
+              trial = unique(instrial), n_press = max(eventNumber), ID = unique(ID),
+              respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
     mutate(total_prew = prewardA + prewardB) %>%
     pivot_longer(cols = c("prewardA", "prewardB"), names_to = "response", values_to = "preward")
   
