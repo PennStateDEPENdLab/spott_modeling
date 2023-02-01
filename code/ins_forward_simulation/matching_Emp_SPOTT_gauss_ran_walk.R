@@ -120,21 +120,36 @@ for (file in data_files){
               trial = unique(instrial), n_press = max(eventNumber), ID = unique(ID),
               respA = sum (key=="8*"), respB = sum(key == "9(")) %>%
     mutate(total_prew = prewardA + prewardB) %>%
-    pivot_longer(cols = c("prewardA", "prewardB"), names_to = "response", values_to = "preward")
+    pivot_longer(cols = c("respA", "respB"), names_to = "response_type", values_to = "response") #%>%
+    #pivot_longer(cols = c("prewardA", "prewardB"), names_to = "preward_type", values_to = "preward")
   
   df <- rbind(df, insblock_temp)
 }
 
-g <- ggplot(df, aes(x=trial, y=preward, label=n_press)) + 
-  geom_point(aes(color = response)) + 
-  geom_text(position=position_dodge(width=0.5)) +
+g <- ggplot(data = df) + 
+  geom_point(aes(x = trial, y = prewardA, color = response_type)) + 
+  geom_text(position=position_dodge(width=0.5), aes(x = trial, y = prewardA, label = response)) +
+  geom_point(aes(x = trial, y = prewardB, color = response_type)) + 
+  geom_text(position=position_dodge(width=0.5), aes(x = trial, y = prewardB, label = response)) +
+  geom_point(aes(color = response_type)) + 
   facet_wrap(~ID)
 
 plot(g)
 
 ## plotting total reward (prewardA + prewardB)
-g <- ggplot(df, aes(x=trial, y=total_prew, label=n_press)) + 
-  geom_text(position=position_dodge(width=0.5)) +
+g <- ggplot(df) + 
+  geom_point(subset(df, response_type %in% "respA"), mapping = aes(x=trial, y=prewardA, color = response_type)) +
+  geom_point(subset(df, response_type %in% "respB"), mapping = aes(x=trial, y=prewardB, color = response_type)) +
+  geom_text(subset(df, response_type %in% "respA"), position=position_dodge(width=0.5), mapping = aes(x=trial, y=prewardA, label = response)) +
+  geom_text(subset(df, response_type %in% "respB"), position=position_dodge(width=0.5), mapping = aes(x=trial, y=prewardB, label = response)) +
+  facet_wrap(~ID)
+
+df <- df %>% filter(trial <= 40) #Only the first ID had 60 trials
+g <- ggplot(df, aes(color = response_type)) + 
+  #geom_point(subset(df, response_type %in% "respA"), mapping = aes(x=trial, y=prewardA, color = response_type)) +
+  #geom_point(subset(df, response_type %in% "respB"), mapping = aes(x=trial, y=prewardB, color = response_type)) +
+  geom_text(subset(df, response_type %in% "respA"), position=position_dodge(width=0.5), mapping = aes(x=trial, y=prewardA, label = response)) +
+  geom_text(subset(df, response_type %in% "respB"), position=position_dodge(width=0.5), mapping = aes(x=trial, y=prewardB, label = response)) +
   facet_wrap(~ID)
 
 plot(g)
