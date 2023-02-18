@@ -1,28 +1,32 @@
 #simulate performance of model in solving instrumental task
 library(tidyverse)
+library()
+setwd("~/Documents/GitHub/spott_modeling")
 source("code/ins_forward_simulation/ins_simulation_functions.R")
 source("code/ins_forward_simulation/ins_learning_choice_rules.R")
 
+setwd("~/Documents/GitHub/spott_modeling/code/ins_forward_simulation/Parameter_values/")
 
 #simple plots of model functions under different parameter settings
 # gamma_sim <- expand.grid(gamma=c(0.1, 1, 10), Q1=0.5, Q2=0.5, nu=1, beta=1, tau=700, rtlast=seq(25, 650, by=15))
 # gamma_sim <- gamma_sim %>% mutate(Q=rowSums(select(., Q1, Q2)))
 
-gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=c(0, 1, 3, 5), nu=-1, beta=200, tau=700, rtlast=seq(25, 600, by=15))
+gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=c(0, 1, 3, 5), nu=-1, beta=200, tau=700, rt_last=seq(25, 600, by=15))
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$gamma_fac <- factor(gamma_sim$gamma, levels=unique(gamma_sim$gamma), labels=paste0("gamma = ", unique(gamma_sim$gamma)))
-g <- ggplot(gamma_sim, aes(x=tau - rtlast, y=presp, color=factor(Q))) + geom_line(size=1.2) + facet_wrap(~gamma_fac, ncol=1) +
+g <- ggplot(gamma_sim, aes(x=tau - rt_last, y=presp, color=factor(Q))) + geom_line(size=1.2) + facet_wrap(~gamma_fac, ncol=1) +
   xlab("Time since last response (ms)") + ylab("p(respond)") +
   ggtitle("p(respond) as a function of Q*, gamma, and time") +
   labs(subtitle="beta = 200, nu = -1") +
   theme_bw(base_size=24) + theme(panel.grid.minor = element_blank()) +
   scale_color_brewer("Total value (Q*)", palette="Dark2") + theme(legend.position="top")
 
+plot(g)
 ggsave(g, file="figures/presp_gamma_time_Qstar.pdf", width=8, height=8)
 
 
 
-gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=seq(0, 10, by=0.1), nu=-1, beta=50, tau=700, rtlast=25)
+gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=seq(0, 10, by=0.1), nu=-1, beta=50, tau=700, rt_last=25)
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$gamma_fac <- factor(gamma_sim$gamma, levels=unique(gamma_sim$gamma), labels=paste0("gamma = ", unique(gamma_sim$gamma)))
 g <- ggplot(gamma_sim, aes(x=Q, y=presp)) + geom_line() + facet_wrap(~gamma, ncol=1) +
@@ -33,7 +37,7 @@ g <- ggplot(gamma_sim, aes(x=Q, y=presp)) + geom_line() + facet_wrap(~gamma, nco
 
 ggsave(g, file="figures/presp_gamma_Qstar.pdf", width=8, height=6)
 
-gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=1, nu=seq(-2, 2, by=0.05), beta=50, tau=700, rtlast=25)
+gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=1, nu=seq(-2, 2, by=0.05), beta=50, tau=700, rt_last=25)
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$gamma_fac <- factor(gamma_sim$gamma, levels=unique(gamma_sim$gamma), labels=paste0("gamma = ", unique(gamma_sim$gamma)))
 g <- ggplot(gamma_sim, aes(x=nu, y=presp)) + geom_line() + facet_wrap(~gamma_fac, ncol=1) + xlab("Basal vigor (nu)") + ylab("p(respond)") +
@@ -42,7 +46,7 @@ g <- ggplot(gamma_sim, aes(x=nu, y=presp)) + geom_line() + facet_wrap(~gamma_fac
   geom_point(data=data.frame(x=-1, y=0.5), aes(x=x, y=y)) + theme_bw(base_size=16)
 
 
-gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=seq(0, 10, by=0.1), nu=-1, beta=50, tau=700, rtlast=25)
+gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=seq(0, 10, by=0.1), nu=-1, beta=50, tau=700, rt_last=25)
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$gamma_fac <- factor(gamma_sim$gamma, levels=unique(gamma_sim$gamma), labels=paste0("gamma = ", unique(gamma_sim$gamma)))
 g <- ggplot(gamma_sim, aes(x=Q, y=presp)) + geom_line() + facet_wrap(~gamma, ncol=1) +
@@ -53,7 +57,7 @@ g <- ggplot(gamma_sim, aes(x=Q, y=presp)) + geom_line() + facet_wrap(~gamma, nco
 
 ggsave(g, file="figures/presp_gamma_Qstar.pdf", width=8, height=6)
 
-gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=c(0, 1, 3, 5), nu=seq(-2, 2, by=0.05), beta=50, tau=700, rtlast=25)
+gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=c(0, 1, 3, 5), nu=seq(-2, 2, by=0.05), beta=50, tau=700, rt_last=25)
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$gamma_fac <- factor(gamma_sim$gamma, levels=unique(gamma_sim$gamma), labels=paste0("gamma = ", unique(gamma_sim$gamma)))
 g <- ggplot(gamma_sim, aes(x=nu, y=presp, color=factor(Q))) + geom_line(size=1.2) + facet_wrap(~gamma_fac, ncol=1) + xlab("Basal vigor (nu)") + ylab("p(respond)") +
@@ -65,10 +69,10 @@ g <- ggplot(gamma_sim, aes(x=nu, y=presp, color=factor(Q))) + geom_line(size=1.2
 ggsave(g, file="figures/presp_gamma_nu_Qstar.pdf", width=8, height=8)
 
 
-gamma_sim <- expand.grid(gamma=c(2), Q=c(2), nu=-1, beta=c(50, 100, 200, 400), tau=1700, rtlast=seq(0, 1700, by=15))
+gamma_sim <- expand.grid(gamma=c(2), Q=c(2), nu=-1, beta=c(50, 100, 200, 400), tau=1700, rt_last=seq(0, 1700, by=15))
 gamma_sim$presp <- unlist(do.call(Map, c(f=p_response, gamma_sim)))
 gamma_sim$beta_fac <- factor(gamma_sim$beta, levels=unique(gamma_sim$beta), labels=paste0("beta = ", unique(gamma_sim$beta)))
-g <- ggplot(gamma_sim, aes(x=tau - rtlast, y=presp, color=factor(beta))) + geom_line(size=1.4) + # facet_wrap(~beta_fac, ncol=1) +
+g <- ggplot(gamma_sim, aes(x=tau - rt_last, y=presp, color=factor(beta))) + geom_line(size=1.4) + # facet_wrap(~beta_fac, ncol=1) +
   xlab("Time since last response (ms)") + ylab("p(respond)") +
   ggtitle("p(respond) as a function of beta and time") +
   labs(subtitle="gamma = 2, nu = -1, Q*=2") +
@@ -85,7 +89,7 @@ ggsave(g, file="figures/presp_beta_time.pdf", width=8, height=8)
 ## choice rule
 #p_switch <- function(Q_c, Q_u, kappa, cost) { 1 / (1 + exp(-1*kappa*(Q_u - cost - Q_c) )) }
 
-sim <- expand.grid(kappa=c(0.4, 2, 5), Q_u=2, Q_c=2, cost=seq(0, 2, by=0.05))
+sim <- expand.grid(kappa=c(0.4, 2, 5), Q_u=1, Q_c=1, cost=seq(0, 2, by=0.05))
 sim$pswitch <- unlist(do.call(Map, c(f=p_switch, sim)))
 #sim$beta_fac <- factor(sim$beta, levels=unique(sim$beta), labels=paste0("beta = ", unique(sim$beta)))
 

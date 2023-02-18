@@ -51,7 +51,10 @@ SimFit_a <- function(params, task_environment, a=a_target){
   
   cost <- sum((log_lm["a"]-a_target)^2)
   print(cost)
-  #if (is.infinite(cost)) {browser()}
+  #if (is.infinite(cost) || is.na(cost)) {browser()}
+  if (is.infinite(cost) || is.na(cost)) {
+    cost <- 1e8
+  }
   return(cost)
 }
   

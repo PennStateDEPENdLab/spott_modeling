@@ -3,6 +3,7 @@
 library(dplyr)
 
 repo_dir <- "~/Documents/Lab_DEPENd/MotivationalVigor_PIT/SPOTT/spott_modeling/ins_forward_simulation"
+repo_dir <- "~/Documents/GitHub/spott_modeling/code/ins_forward_simulation"
 setwd(repo_dir)
 source("ins_simulation_functions.R")
 source("ins_learning_choice_rules.R")
