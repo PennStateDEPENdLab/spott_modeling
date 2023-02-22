@@ -20,7 +20,7 @@ task_environment <- setup_task_environment(
     expression(grwalk(n_trials, start = 0.7, 0.08)),
     expression(grwalk(n_trials, start = 0.3, 0.08))
   ),
-  n_trials = 100,
+  n_trials = 20,
   model = "exp" #model # note that the $model element can be edited and then passed back into a simulation function
 )
 
@@ -141,7 +141,7 @@ plot(log_lm_nu2$nu, log_lm_nu2$log_p1_p2)
 # Simulate along omega ----------------------------------------------------
 
 ## omega
-omegas <- seq(-2, 5, by=0.5)
+omegas <- seq(0, 5, by=0.5)
 res_omega <- foreach(i=seq_along(omegas)) %dopar% {
   pars <- initial_params #$value
   pars["omega"] <- omegas[i]
@@ -191,6 +191,10 @@ g_log <- ggplot(res_combined_omega, aes(x=y=log_p1_p2, log_n1_n2)) +
 
 kappa_omega <- expand.grid(kappa = seq(1, 6, by = 1),
                          omega = seq(0, 5, by=0.5))
+
+kappa_omega_also <- expand.grid(kappa = seq(1, 6, by = 1),
+                           omega = seq(0, 5, by=0.5), q1=seq(0,1, by=.1), q2=seq(0,1 by=0.1))
+
 
 res_kappa_omega <- foreach(i=1:nrow(kappa_omega )) %dopar% {
   pars <- initial_params #$value
