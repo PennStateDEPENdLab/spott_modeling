@@ -35,12 +35,12 @@ kvals <- c(2)
 
 sim_grid <- expand.grid(
   model = model,
-  alpha_mean = c(0.1),
+  alpha_mean = c(0.1, 0.2),
   alpha_sd = 0.1,
   alpha_min = 0.02,
   alpha_max = 0.98,
   gamma_mean = gvals,
-  nu_mean = c(0.25, 0.5),
+  nu_mean = c(0.25),
   nu_sd = 0.3,
   nu_min = 0.001,
   nu_max = 4,
@@ -128,12 +128,12 @@ res <- foreach(
   # distill subject parameters
   parmat <- stan_population %>%
     group_by(id) %>%
-    summarize_at(vars(alpha, gamma, nu, beta, omega, kappa), mean)
+    summarize_at(vars(alpha, gamma, nu, omega, kappa), mean)
   
   # write ground truth parameters for each subject
   write.csv(parmat, file = file.path(cond_out_dir, paste0("stan_population_parameters_", cond$cond_id, ".csv")), row.names = F)
   
-  dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -beta, -omega, -kappa)
+  dsplit <- stan_population %>% select(-alpha, -gamma, -nu, -omega, -kappa)
   
   dsplit <- split(dsplit, dsplit$id)
   for (d in seq_along(dsplit)) {
