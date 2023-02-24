@@ -42,10 +42,12 @@ sim_grid <- expand.grid(
   gamma_mean = gvals,
   nu_mean = c(0.25),
   nu_sd = 0.3,
-  nu_min = 0.001,
+  nu_min = 0,
   nu_max = 4,
   omega_mean = c(0,1),
   omega_sd = 1,
+  omega_min = 0,
+  omega_max = 6, 
   kappa_mean = kvals
 )
 
@@ -62,10 +64,12 @@ sim_grid <- expand.grid(
 #   gamma_mean = gvals,
 #   nu_mean = seq(0, 2, 0.25), # Keeping nu positive
 #   nu_sd = 0.3,
-#   nu_min = 0.001,
+#   nu_min = 0,
 #   nu_max = 4,
 #   omega_mean = seq(0, 4, 0.5),
 #   omega_sd = 1,
+#   omega_min = 0,
+#   omega_max = 6, 
 #   kappa_mean = kvals
 # )
 
@@ -106,7 +110,7 @@ res <- foreach(
     alpha = expression(rtruncnorm(nsubjects, a=cond$alpha_min, b=cond$alpha_max, mean=cond$alpha_mean, sd=cond$alpha_sd)),
     gamma = expression(rgamma_moments(nsubjects, mean = cond$gamma_mean, sd = cond$gamma_sd)),
     nu=expression(rtruncnorm(nsubjects,  a=cond$nu_min, b=cond$nu_max, mean=cond$nu_mean, sd=cond$nu_sd)), 
-    omega = expression(rnorm(nsubjects, mean = cond$omega_mean, cond$omega_sd)), # switch omega/stickiness
+    omega = expression(rtruncnorm(nsubjects, a=cond$omega_min, b=cond$omega_max, mean = cond$omega_mean, cond$omega_sd)), # switch omega/stickiness
     kappa = expression(rgamma_moments(nsubjects, mean = cond$kappa_mean, sd = cond$kappa_sd)) # (inverse) temperature on value-guided component of choice
   )
   
