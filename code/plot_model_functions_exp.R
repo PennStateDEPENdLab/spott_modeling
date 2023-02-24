@@ -7,6 +7,9 @@ source("code/ins_forward_simulation/ins_learning_choice_rules.R")
 
 setwd("~/Documents/GitHub/spott_modeling/code/ins_forward_simulation/Parameter_values/")
 
+# PANDAA
+# c(alpha=0.1259690, gamma=3.2626238, nu=0.5724897, omega=3.4277531, kappa = 2.1928352) 
+
 # Finding gamma and nu values ---------------------------------------------
 
 # gamma_sim <- expand.grid(gamma=c(0.4, 2, 5), Q=c(0, 1, 3, 5), nu=-1, tau=700, rt_last=seq(25, 600, by=15))
