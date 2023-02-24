@@ -8,13 +8,13 @@ library(tidyverse)
 repo_dir <- "/proj/mnhallqlab/projects/spott_modeling"
 
 code_dir <- "/nas/longleaf/home/maruofan/GitHub/spott_modeling/code/ins_forward_simulation"
-out_dir <- file.path(repo_dir, "data/par_sim_exp/full")
+out_dir <- file.path(repo_dir, "outputs/par_sim_exp_full")
 nsubjects <- 50
 model <- "exp"
 
-if (!dir.exists(file.path(repo_dir, "par_sim_exp"))) {
-  dir.create(file.path(repo_dir, "par_sim_exp"))
-}
+# if (!dir.exists(file.path(repo_dir, "par_sim_exp"))) {
+#   dir.create(file.path(repo_dir, "par_sim_exp"))
+# }
 
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
