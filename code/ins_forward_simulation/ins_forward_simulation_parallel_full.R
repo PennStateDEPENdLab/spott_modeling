@@ -30,48 +30,33 @@ source("ins_learning_choice_rules.R")
 # kappa <- seq(2, 6, 1)
 # omega <- seq(0, 4, 0.5)
 
-gvals <- 1.1^(seq(from=-16, to=15, length.out=3))
-kvals <- c(2)
+# learning rate (alpha) follows rtruncnorm
+# vigor sensitivity (gamma) follows gamma
+# basal vigor (nu) follows rtruncnorm
+# motor recovery (beta) is unused in exp
+# choice stickiness (omega) follows rtruncnorm
+# inverse temperature (kappa) follows gamma
+
+gvals <- 1.1^(seq(from=-16, to=15, length.out=10))
+kvals <- seq(2, 6, 1)
 
 sim_grid <- expand.grid(
   model = model,
-  alpha_mean = c(0.1, 0.2),
-  alpha_sd = 0.1,
-  alpha_min = 0.02,
+  alpha_mean = seq(0.1, 0.8, by = 0.1),
+  alpha_sd = 0.1, # fixed for now
+  alpha_min = 0.02, # set constraints on learning rates
   alpha_max = 0.98,
   gamma_mean = gvals,
-  nu_mean = c(0.25),
+  nu_mean = seq(0, 2, 0.25), # Keeping nu positive
   nu_sd = 0.3,
   nu_min = 0,
   nu_max = 4,
-  omega_mean = c(0,1),
+  omega_mean = seq(0, 4, 0.5),
   omega_sd = 1,
   omega_min = 0,
-  omega_max = 6, 
+  omega_max = 6,
   kappa_mean = kvals
 )
-
-
-# gvals <- 1.1^(seq(from=-16, to=15, length.out=10))
-# kvals <- seq(2, 6, 1)
-# 
-# sim_grid <- expand.grid(
-#   model = model,
-#   alpha_mean = seq(0.1, 0.8, by = 0.1),
-#   alpha_sd = 0.1, # fixed for now
-#   alpha_min = 0.02, # set constraints on learning rates
-#   alpha_max = 0.98,
-#   gamma_mean = gvals,
-#   nu_mean = seq(0, 2, 0.25), # Keeping nu positive
-#   nu_sd = 0.3,
-#   nu_min = 0,
-#   nu_max = 4,
-#   omega_mean = seq(0, 4, 0.5),
-#   omega_sd = 1,
-#   omega_min = 0,
-#   omega_max = 6, 
-#   kappa_mean = kvals
-# )
 
 sim_grid$gamma_sd <- sqrt(gvals) # make b/w variation proportionate to mean, don't cross with gamma_mean in design
 sim_grid$kappa_sd <- sqrt(kvals) # make b/w variation proportionate to mean, don't cross with kappa_mean in design
