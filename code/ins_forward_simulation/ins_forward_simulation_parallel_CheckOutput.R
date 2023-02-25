@@ -2,6 +2,7 @@
 
 outputs <- list.files("/nas/longleaf/home/maruofan/mnhallqlab/projects/spott_modeling/outputs/par_sim_exp_full")
 save(outputs, file = "/nas/longleaf/home/maruofan/GitHub/spott_modeling/data/parallel_outputs.RData")
+# I just downloaded the "parallel_outputs.RData" file from longleaf to work locally 
 
 out_IDs <- str_pad(1:32400, 5, pad = "0")
 out_IDs <- paste0("cond", out_IDs)
