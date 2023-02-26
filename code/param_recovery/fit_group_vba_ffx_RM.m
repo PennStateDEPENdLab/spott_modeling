@@ -14,7 +14,7 @@ clear;
 
 %% external settings
 
-% subjID = getenv("subj");
+subjID = getenv("subj");
 % disp(subjID)
 
 %%
