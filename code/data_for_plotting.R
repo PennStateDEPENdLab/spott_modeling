@@ -65,5 +65,5 @@ sim <- cbind(sim, sim_grid_rep)
 #Combine the simulation parameter values and recovered parameter values for plotting
 df_sim_est_full <- data.frame(sim, est)
 
-save(ggDF, file = "/nas/longleaf/home/maruofan/GitHub/spott_modeling/data/ggDF.RData")
+save(df_sim_est_full, file = "/nas/longleaf/home/maruofan/GitHub/spott_modeling/data/df_sim_est_full.RData")
 # hist(ggDF$nu, bin = 6)
