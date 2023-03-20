@@ -1,3 +1,4 @@
+library(stringr)
 # this script checks which simulation conditions are missing, when the number of output files is fewer than expected
 
 # outputs <- list.files("/nas/longleaf/home/maruofan/mnhallqlab/projects/spott_modeling/outputs/par_sim_exp_full")
