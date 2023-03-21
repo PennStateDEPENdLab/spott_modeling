@@ -62,6 +62,8 @@ sim_grid$gamma_sd <- sqrt(gvals) # make b/w variation proportionate to mean, don
 sim_grid$kappa_sd <- sqrt(kvals) # make b/w variation proportionate to mean, don't cross with kappa_mean in design
 sim_grid$cond_id <- 1:nrow(sim_grid)
 
+sim_grid <- sim_grid[9684,]
+
 chunk_size <- 10
 registerDoFuture()
 
